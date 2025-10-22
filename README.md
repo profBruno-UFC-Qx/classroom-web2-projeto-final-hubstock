@@ -20,8 +20,6 @@ Dono de Restaurantes/Bares
 ## :people_holding_hands: Papéis ou tipos de usuário da aplicação
 Administrador e Garçom
 
-> Tenha em mente que obrigatoriamente a aplicação deve possuir funcionalidades acessíveis a todos os tipos de usuário e outra funcionalidades restritas a certos tipos de usuários.
-
 ## :triangular_flag_on_post:	 Principais funcionalidades da aplicação
 As funcionalidades do HubStock serão divididas para garantir que cada tipo de usuário (Administrador e Garçom) tenha as ferramentas necessárias para cumprir seu papel, mantendo a segurança e o controle de acesso.
 
