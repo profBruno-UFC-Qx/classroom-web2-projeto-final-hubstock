@@ -13,7 +13,7 @@ const MOCKED_USERS = {
     garcom: { id: "garcom-uuid-123", role: 'GARCOM', name: 'João Silva' },
 };
 
-// Expiração do token (3600 segundos = 1 hora)
+// 3600 segundos = 1 hora
 const MOCK_TOKEN_EXPIRATION_SECONDS = 3600;
 
 export const useAuthStore = defineStore('auth', {
@@ -31,15 +31,10 @@ export const useAuthStore = defineStore('auth', {
     },
 
     actions: {
-        /**
-         * Simula o processo de Login (Requisição ao Backend).
-         * @param username O nome de usuário para login ('admin' ou 'garcom').
-         * @param password A senha (não verificamos a senha no mock, mas é um campo obrigatório).
-         */
         async login(username: string, password: string): Promise<boolean> {
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // 2. Verifica se o usuário existe
+            // verifica se o usuário existe
             const user = MOCKED_USERS[username as keyof typeof MOCKED_USERS];
 
             if (!user) {
@@ -47,17 +42,14 @@ export const useAuthStore = defineStore('auth', {
                 return false;
             }
 
-            // Geração de um Token Falso (JWT Mockado)
             const fakePayload = {
                 userId: username === 'admin' ? "admin-uuid-123" : "garcom-uuid-123",
                 role: user.role,
                 exp: Math.floor(Date.now() / 1000) + MOCK_TOKEN_EXPIRATION_SECONDS,
             };
 
-            // Um token JWT bem simples
             const mockToken = `fake-jwt-header.${btoa(JSON.stringify(fakePayload))}.fake-signature`;
 
-            // Armazena o estado e persiste no LocalStorage
             this.token = mockToken;
             this.userRole = user.role as UserRole;
             this.userName = user.name;
@@ -72,9 +64,6 @@ export const useAuthStore = defineStore('auth', {
             return true;
         },
 
-        /**
-         * Realiza o Logout do usuário, limpando o estado e o LocalStorage.
-         */
         logout() {
             this.token = null;
             this.userRole = null;
@@ -88,20 +77,16 @@ export const useAuthStore = defineStore('auth', {
             console.log('Logout realizado com sucesso.');
         },
 
-        /**
-         * Checa se o usuário atual possui um determinado papel.
-         * @param roleToCheck O papel que está sendo verificado.
-         */
         hasRequiredRole(roleToCheck: UserRole): boolean {
-            if (!roleToCheck) return true; // Se não for exigido um papel específico, permite
-            if (!this.userRole) return false; // Se não houver usuário logado, nega
+            if (!roleToCheck) return true;
+            if (!this.userRole) return false;
 
-            // O Garçom e o Administrador têm acesso a funcionalidades de Garçom.
+            // Garçom e Administrador têm acesso a funcionalidades de Garçom.
             if (roleToCheck === 'GARCOM' && (this.userRole === 'GARCOM' || this.userRole === 'ADMINISTRADOR')) {
                 return true;
             }
 
-            // Apenas o Administrador tem acesso a funcionalidades de Administrador.
+            // apenas o Administrador tem acesso a funcionalidades de Administrador.
             if (roleToCheck === 'ADMINISTRADOR' && this.userRole === 'ADMINISTRADOR') {
                 return true;
             }

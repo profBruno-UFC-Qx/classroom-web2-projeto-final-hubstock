@@ -13,7 +13,7 @@ export interface Category {
   description: string;
 }
 
-// PRODUTO (O Estoque)
+// PRODUTO
 export type ProductUnit = 'UNIDADE' | 'LITRO' | 'KILOGRAMA';
 
 export interface Product {
@@ -22,9 +22,9 @@ export interface Product {
   name: string;
   description: string;
   currentStock: number; // Nível atual de estoque
-  unitOfMeasure: ProductUnit; // Unidade de medida (ex: UNIDADE, LITRO)
-  costPrice: number; // Custo de aquisição (usado para lucros)
-  salePrice: number; // Preço de venda
+  unitOfMeasure: ProductUnit; // UNIDADE, LITRO, KILOGRAMA
+  costPrice: number; // Custo de aquisição (para lucros)
+  salePrice: number;
 }
 
 // MOVIMENTACAO_ESTOQUE

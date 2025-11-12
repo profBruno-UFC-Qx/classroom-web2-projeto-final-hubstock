@@ -1,10 +1,8 @@
 <template>
     <div class="admin-container">
-        <h1>🔑 Painel Administrativo</h1>
-        <p>Área restrita. Apenas usuários com o papel **{{ authStore.userRole }}** podem ver esta página.</p>
+        <h1 class="bg-red-400">Gerenciamento de Produtos</h1>
 
         <div class="admin-tools">
-            <h2>🛠️ Gerenciamento de Produtos</h2>
             <p v-if="productStore.isLoading">Carregando dados de produtos...</p>
             <p v-else-if="productStore.error" class="error-message">
                 Erro: {{ productStore.error }}
@@ -44,10 +42,8 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useAuthStore } from '@/stores/auth';
 import { useProductStore } from '@/stores/product';
 
-const authStore = useAuthStore();
 const productStore = useProductStore();
 
 onMounted(() => {

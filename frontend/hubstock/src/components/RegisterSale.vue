@@ -93,11 +93,11 @@ const totalAmount = computed(() => {
 });
 
 const isValid = computed(() => {
-    // Deve ter pelo menos um item válido
+    // pelo menos um item válido
     if (saleItems.value.length === 0 || saleItems.value.every(item => item.productId === 0 || item.quantity <= 0)) {
         return false;
     }
-    // Lógica de estoque baixo (o service fará a validação final, mas é bom ter um aviso visual)
+    // lógica de estoque baixo
     return true;
 });
 
@@ -136,24 +136,16 @@ async function handleSaleSubmission() {
         
         alert(`Venda #${newSale.id} no valor de R$ ${newSale.totalAmount.toFixed(2)} registrada com sucesso!`);
         
-        // Limpa o formulário
+        // limpa o formulário
         saleItems.value = [{ productId: 0, quantity: 1 }];
 
     } catch (e) {
-        // O erro já está no saleStore.error
         console.error('Erro na submissão da venda:', e);
     }
 }
-
-// O Garçom precisa do ID do usuário, que deve ser exportado do authStore
-// Adicione um getter para o usuário no authStore.ts (se ainda não tiver):
-// getters: { user: (state) => ({ id: 2, role: state.userRole, name: state.userName }) }
-// Para o mock funcionar, vamos apenas usar 2 (Garçom João) por enquanto, ou assumir que o authStore tem o ID.
-// (Vou assumir que você ajustará o authStore para ter o ID do usuário logado)
 </script>
 
 <style scoped>
-/* Estilos básicos para o componente de venda */
 .sale-register {
     background: #f8f8f8;
     padding: 20px;

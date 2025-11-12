@@ -27,7 +27,6 @@ class SalesService {
 
         const itemsToProcess: { product: Product, quantity: number }[] = [];
 
-        // Verifica estoque e calcula o valor total
         for (const item of saleData.items) {
             const product = MOCKED_PRODUCTS.find(p => p.id === item.productId);
 
@@ -96,7 +95,6 @@ class SalesService {
         return newSale;
     }
 
-    // Implementar dps outros métodos como getSalesByPeriod, getSaleDetails ...
 }
 
 export const salesService = new SalesService();

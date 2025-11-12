@@ -2,10 +2,10 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth';
 import type { UserRole } from '@/types/entity-types';
-import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
 import AdminPanelView from '../views/AdminPanelView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
+import VendaGarcomView from '../views/VendaGarcomView.vue';
 
 type AppRouteRecordRaw = RouteRecordRaw & {
   meta?: {
@@ -24,11 +24,12 @@ const routes: Array<AppRouteRecordRaw> = [
     },
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: LoginView,
+    path: '/venda',
+    name: 'VendaGarcom',
+    component: VendaGarcomView,
     meta: {
-      requiresAuth: false, // O login não exige autenticação
+      requiresAuth: true,
+      requiredRole: 'GARCOM',
     },
   },
   {
@@ -36,8 +37,8 @@ const routes: Array<AppRouteRecordRaw> = [
     name: 'Dashboard',
     component: DashboardView,
     meta: {
-      requiresAuth: true, // Requisito #2: Protegida (todos logados)
-      requiredRole: 'GARCOM', // Garçom ou Admin podem acessar
+      requiresAuth: true,
+      requiredRole: 'ADMINISTRADOR',
     },
   },
   {
@@ -45,8 +46,8 @@ const routes: Array<AppRouteRecordRaw> = [
     name: 'AdminPanel',
     component: AdminPanelView,
     meta: {
-      requiresAuth: true, // Requisito #2: Protegida
-      requiredRole: 'ADMINISTRADOR', // Requisito #3: Apenas Admin pode acessar
+      requiresAuth: true,
+      requiredRole: 'ADMINISTRADOR',
     },
   },
   {
@@ -62,26 +63,40 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore(); // Obtém o store de autenticação
+  const authStore = useAuthStore();
 
   const requiresAuth = to.meta.requiresAuth;
   const requiredRole = to.meta.requiredRole;
+  const isAuthenticated = authStore.isAuthenticated;
 
-  if (requiresAuth && !authStore.isAuthenticated) {
-    // 1. Se a rota exige autenticação E o usuário NÃO está logado
-    console.log('Redirecionando para Login: Requer autenticação.');
+  if (requiresAuth && !isAuthenticated) {
     next({ name: 'Login', query: { redirect: to.fullPath } });
-  } else if (requiresAuth && requiredRole && !authStore.hasRequiredRole(requiredRole as UserRole)) {
-    // 2. Se a rota exige autenticação E o usuário logado NÃO tem o papel necessário
-    console.log(`Redirecionando para Dashboard: Papel necessário: ${requiredRole as UserRole}. Papel atual: ${authStore.userRole}`);
-    // Redireciona para o dashboard ou uma página de acesso negado
-    next({ name: 'Dashboard' });
-  } else if (authStore.isAuthenticated && to.name === 'Login') {
-    // 3. Se o usuário JÁ está logado e tenta acessar a página de Login
-    console.log('Redirecionando para Dashboard: Já autenticado.');
-    next({ name: 'Dashboard' });
+  } else if (isAuthenticated && requiredRole && !authStore.hasRequiredRole(requiredRole as UserRole)) {
+    console.log('Acesso Negado. Redirecionando...');
+    if (authStore.isAdmin) {
+      next({ name: 'Dashboard' });
+    } else if (authStore.isGarcom) {
+      next({ name: 'VendaGarcom' });
+    } else {
+      next({ name: 'Home' });
+    }
+  } else if (isAuthenticated && to.name === 'Login') {
+    if (authStore.isAdmin) {
+      next({ name: 'Dashboard' });
+    } else if (authStore.isGarcom) {
+      next({ name: 'VendaGarcom' });
+    } else {
+      next({ name: 'Home' });
+    }
+  } else if (isAuthenticated && to.name === 'Home') {
+    if (authStore.isAdmin) {
+      next({ name: 'Dashboard' });
+    } else if (authStore.isGarcom) {
+      next({ name: 'VendaGarcom' });
+    } else {
+      next();
+    }
   } else {
-    // 4. Permite o acesso à rota
     next();
   }
 });
