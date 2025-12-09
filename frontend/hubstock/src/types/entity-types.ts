@@ -1,10 +1,18 @@
-export type UserRole = 'ADMINISTRADOR' | 'GARCOM' | null;
+export type UserRole = 'SUPERADMINISTRADOR' | 'ADMINISTRADOR' | 'GARCOM';
+
+export interface Restaurant {
+  id: string;
+  name: string;
+  cnpj: string;
+  profileImageUrl: string;
+}
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  restaurantId: string;
 }
 
 export interface Category {
@@ -21,10 +29,11 @@ export interface Product {
   categoryId: number;
   name: string;
   description: string;
-  currentStock: number; // Nível atual de estoque
-  unitOfMeasure: ProductUnit; // UNIDADE, LITRO, KILOGRAMA
-  costPrice: number; // Custo de aquisição (para lucros)
+  currentStock: number;
+  unitOfMeasure: ProductUnit;
+  costPrice: number;
   salePrice: number;
+  imageUrl?: string;
 }
 
 // MOVIMENTACAO_ESTOQUE
@@ -55,4 +64,14 @@ export interface SaleItem {
   productId: number;
   quantity: number;
   unitPrice: number; // Preço pelo qual o item foi vendido
+}
+
+// Registro público de restaurante e administrador
+export interface PublicRegistrationPayload {
+    restaurantName: string;
+    cnpj: string;
+    profileImageUrl: string;
+    adminName: string;
+    adminEmail: string;
+    adminPassword: string;
 }

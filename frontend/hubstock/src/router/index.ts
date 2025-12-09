@@ -2,10 +2,16 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth';
 import type { UserRole } from '@/types/entity-types';
-import DashboardView from '../views/DashboardView.vue';
-import AdminPanelView from '../views/AdminPanelView.vue';
+import ProdutosAdminView from '../views/produto/ProdutosAdminView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
-import VendaGarcomView from '../views/VendaGarcomView.vue';
+import PedidoDetailView from '@/views/venda/PedidoDetailView.vue';
+import MesaSelectionView from '@/views/venda/MesaSelectionView.vue';
+import EstoqueView from '@/views/estoque/EstoqueView.vue';
+import UsuariosView from '@/views/users/UsuariosView.vue';
+import DashboardSuperAdmin from '@/views/super-admin/DashboardSuperAdminView.vue';
+import DashboardAdmin from '@/views/admin/dashboard/DashboardAdminView.vue';
+import RestaurantBIView from '@/views/super-admin/RestaurantBIView.vue';
+import CadastroRestauranteView from '@/views/CadastroRestauranteView.vue';
 
 type AppRouteRecordRaw = RouteRecordRaw & {
   meta?: {
@@ -24,9 +30,26 @@ const routes: Array<AppRouteRecordRaw> = [
     },
   },
   {
+    path: '/cadastro',
+    name: 'RestauranteCadastro',
+    component: CadastroRestauranteView,
+    meta: {
+      requiresAuth: false,
+    },
+  },
+  {
     path: '/venda',
-    name: 'VendaGarcom',
-    component: VendaGarcomView,
+    name: 'MesaSelection',
+    component: MesaSelectionView,
+    meta: {
+      requiresAuth: true,
+      requiredRole: 'GARCOM',
+    },
+  },
+  {
+    path: '/venda/:mesaId',
+    name: 'PedidoDetail',
+    component: PedidoDetailView,
     meta: {
       requiresAuth: true,
       requiredRole: 'GARCOM',
@@ -35,19 +58,55 @@ const routes: Array<AppRouteRecordRaw> = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: DashboardView,
+    component: DashboardAdmin,
     meta: {
       requiresAuth: true,
       requiredRole: 'ADMINISTRADOR',
     },
   },
   {
-    path: '/admin',
-    name: 'AdminPanel',
-    component: AdminPanelView,
+    path: '/produtos',
+    name: 'ProdutosAdmin',
+    component: ProdutosAdminView,
     meta: {
       requiresAuth: true,
       requiredRole: 'ADMINISTRADOR',
+    },
+  },
+  {
+    path: '/estoque',
+    name: 'EstoqueAdmin',
+    component: EstoqueView,
+    meta: {
+      requiresAuth: true,
+      requiredRole: 'ADMINISTRADOR',
+    },
+  },
+  {
+    path: '/users',
+    name: 'Users',
+    component: UsuariosView,
+    meta: {
+      requiresAuth: true,
+      requiredRole: 'ADMINISTRADOR',
+    },
+  },
+  {
+    path: '/superadmin/dashboard',
+    name: 'DashboardSuperAdmin',
+    component: DashboardSuperAdmin,
+    meta: {
+      requiresAuth: true,
+      requiredRole: 'SUPERADMINISTRADOR',
+    },
+  },
+  {
+    path: '/superadmin/restaurante/:restId',
+    name: 'RestaurantBI',
+    component: RestaurantBIView,
+    meta: {
+      requiresAuth: true,
+      requiredRole: 'SUPERADMINISTRADOR',
     },
   },
   {
@@ -66,39 +125,36 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 
   const requiresAuth = to.meta.requiresAuth;
-  const requiredRole = to.meta.requiredRole;
+  const requiredRole = to.meta.requiredRole as UserRole;
   const isAuthenticated = authStore.isAuthenticated;
 
+  const redirectToUserDefaultRoute = () => {
+    if (authStore.isSuperAdmin) {
+      return next({ name: 'DashboardSuperAdmin' });
+    }
+    if (authStore.isAdmin) {
+      return next({ name: 'Dashboard' });
+    }
+    if (authStore.isGarcom) {
+      return next({ name: 'MesaSelection' });
+    }
+    return next({ name: 'Home' });
+  };
+
   if (requiresAuth && !isAuthenticated) {
-    next({ name: 'Login', query: { redirect: to.fullPath } });
-  } else if (isAuthenticated && requiredRole && !authStore.hasRequiredRole(requiredRole as UserRole)) {
-    console.log('Acesso Negado. Redirecionando...');
-    if (authStore.isAdmin) {
-      next({ name: 'Dashboard' });
-    } else if (authStore.isGarcom) {
-      next({ name: 'VendaGarcom' });
-    } else {
-      next({ name: 'Home' });
-    }
-  } else if (isAuthenticated && to.name === 'Login') {
-    if (authStore.isAdmin) {
-      next({ name: 'Dashboard' });
-    } else if (authStore.isGarcom) {
-      next({ name: 'VendaGarcom' });
-    } else {
-      next({ name: 'Home' });
-    }
-  } else if (isAuthenticated && to.name === 'Home') {
-    if (authStore.isAdmin) {
-      next({ name: 'Dashboard' });
-    } else if (authStore.isGarcom) {
-      next({ name: 'VendaGarcom' });
-    } else {
-      next();
-    }
-  } else {
-    next();
+    return next({ name: 'Home', query: { redirect: to.fullPath } });
   }
+
+  if (isAuthenticated && !requiredRole && authStore.hasRequiredRole(requiredRole)) {
+    console.log(`Acesso Negado. Papel necessário: ${requiredRole}. Papel atual: ${authStore.userRole}`);
+    return redirectToUserDefaultRoute();
+  }
+
+  if (isAuthenticated && (to.name === 'Login' || to.name === 'Home')) {
+    return redirectToUserDefaultRoute();
+  }
+
+  next();
 });
 
 export default router

@@ -1,5 +1,5 @@
 <template>
-  <template v-if="$route.name === 'Login' || $route.name === 'NotFound' || $route.name === 'Home'">
+  <template v-if="$route.name === 'Login' || $route.name === 'NotFound' || $route.name === 'Home' || $route.name === 'RestauranteCadastro'">
     <router-view />
   </template>
   <template v-else>

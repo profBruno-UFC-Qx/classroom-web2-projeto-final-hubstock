@@ -14,11 +14,7 @@ interface NewSaleData {
 
 class SalesService {
 
-    /**
-     * Simula o processo de registrar uma nova venda completa.
-     * @param saleData Os dados da nova venda (ID do usuário e lista de produtos/quantidades).
-     * @returns A venda criada.
-     */
+    // Processo de registrar uma nova venda.
     public async registerNewSale(saleData: NewSaleData): Promise<Sale> {
         await mockDelay(DELAY_MS);
 
@@ -41,13 +37,12 @@ class SalesService {
             itemsToProcess.push({ product, quantity: item.quantity });
         }
 
-        // --- Criação da VENDA ---
         const newSaleId = Math.max(...MOCKED_SALES.map(s => s.id), 0) + 1;
         const newSale: Sale = {
             id: newSaleId,
             userId: saleData.userId,
             date: now,
-            totalAmount: parseFloat(totalAmount.toFixed(2)),
+            totalAmount: Number.parseFloat(totalAmount.toFixed(2)),
         };
         MOCKED_SALES.push(newSale);
 

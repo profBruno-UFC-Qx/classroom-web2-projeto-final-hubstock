@@ -21,12 +21,9 @@ export default defineConfig({
     preprocessorOptions: {
       less: {
         modifyVars: {
-          // Modifica a variável principal do Ant Design
           'primary-color': HUBSTOCK_PRIMARY_COLOR,
-          // Opcional: Modificar o fundo do layout, caso não seja tratado por CSS
-          // 'layout-body-background': '#f0f2f5', 
+          'html-color-scheme': 'light',
         },
-        // Configuração necessária para o Ant Design funcionar com Less
         javascriptEnabled: true,
       }
     }

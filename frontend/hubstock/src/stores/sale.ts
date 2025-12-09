@@ -9,12 +9,6 @@ export const useSaleStore = defineStore('sale', () => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
-  /**
-   * Registra uma nova venda através do Sales Service.
-   * Em caso de sucesso, atualiza o estado de produtos localmente.
-   * @param userId ID do Garçom logado.
-   * @param items Lista de { productId, quantity } da venda.
-   */
   async function registerSale(userId: string, items: { productId: number; quantity: number }[]) {
     isLoading.value = true;
     error.value = null;

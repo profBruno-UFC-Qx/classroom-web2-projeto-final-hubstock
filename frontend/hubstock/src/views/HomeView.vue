@@ -20,7 +20,7 @@
 
           <div class="input-group">
             <label for="username" class="label-forms">Usuário</label>
-            <input type="text" id="username" v-model="username" placeholder="admin ou garcom" required />
+            <input type="text" id="username" v-model="username" placeholder="savio, pedro, joao" required />
           </div>
 
           <div class="input-group">
@@ -36,6 +36,12 @@
 
         </form>
 
+        <a-divider style="margin: 15px 0;" />
+        <p class="cadastro-link-login">
+            Não tem seu restaurante cadastrado? 
+            <router-link to="/cadastro">Cadastre-se aqui</router-link>
+        </p>
+
       </div>
 
     </div>
@@ -45,11 +51,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { redirectToUser } from '@/hooks/redirect';
 
-import { useRouter } from 'vue-router';
+import { message } from 'ant-design-vue';
 
 const authStore = useAuthStore();
-const router = useRouter();
 
 const username = ref('');
 const password = ref('');
@@ -61,12 +67,11 @@ async function handleLogin() {
   isLoading.value = true;
 
   try {
-    const success = await authStore.login(username.value, password.value);
+    const response = await authStore.login(username.value, password.value);
 
-    if (success) {
-      // Se o login for bem-sucedido, redireciona para o Dashboard
-      const redirectTo = (router.currentRoute.value.query.redirect as string) || '/dashboard';
-      router.push(redirectTo);
+    if (response) {
+      message.success('Login realizado com sucesso!');
+      redirectToUser();
     } else {
       error.value = 'Usuário ou senha inválidos. Tente novamente.';
     }
@@ -162,7 +167,7 @@ async function handleLogin() {
   width: 100%;
   padding: 10px;
   background-color: #42b983;
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -228,5 +233,23 @@ async function handleLogin() {
 .feature-item h3 {
   color: #42b983;
   margin-bottom: 10px;
+}
+
+.cadastro-link-login {
+    text-align: center;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.cadastro-link-login a {
+    color: #42b983;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.cadastro-link-login a:hover {
+    color: #38a169;
+    text-decoration: underline;
 }
 </style>

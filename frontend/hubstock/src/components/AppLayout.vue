@@ -10,45 +10,52 @@
 
       <a-menu v-model:selectedKeys="selectedKeys" :theme="siderTheme" mode="inline" :open-keys="openKeys"
         @openChange="onOpenChange">
-        <a-menu-item key="vendas" @click="goTo('VendaGarcom')" v-if="authStore.isGarcom">
-          <template #icon><shop-outlined /></template>
-          <span>Venda Rápida</span>
+        <a-menu-item key="vendas" @click="goTo('MesaSelection')" v-if="!authStore.isSuperAdmin">
+          <template #icon>
+            <ShopOutlined />
+          </template>
+          <span>Venda</span>
         </a-menu-item>
 
         <a-menu-item key="dashboard" @click="goTo('Dashboard')" v-if="authStore.isAdmin">
-          <template #icon><dashboard-outlined /></template>
+          <template #icon>
+            <DashboardOutlined />
+          </template>
           <span>Dashboard</span>
         </a-menu-item>
 
-        <a-menu-item key="produtos" @click="goTo('AdminPanel')" v-if="authStore.isAdmin">
-          <template #icon><box-plot-outlined /></template>
+        <a-menu-item key="produtos" @click="goTo('ProdutosAdmin')" v-if="authStore.isAdmin">
+          <template #icon>
+            <BoxPlotOutlined />
+          </template>
           <span>Produtos</span>
         </a-menu-item>
 
-        <a-menu-item key="estoque" @click="goTo('Estoque')" v-if="authStore.isAdmin">
-          <template #icon><stock-outlined /></template>
+        <a-menu-item key="estoque" @click="goTo('EstoqueAdmin')" v-if="authStore.isAdmin">
+          <template #icon>
+            <StockOutlined />
+          </template>
           <span>Estoque</span>
         </a-menu-item>
 
-        <a-menu-item key="fornecedores" @click="goTo('Fornecedores')" v-if="authStore.isAdmin">
-          <template #icon><user-switch-outlined /></template>
-          <span>Fornecedores</span>
+        <a-menu-item key="users" @click="goTo('Users')" v-if="authStore.isAdmin">
+          <template #icon>
+            <UserGroupOutlined />
+          </template>
+          <span>Usuários</span>
+        </a-menu-item>
+        <a-menu-item key="dashboard_super_admin" @click="goTo('DashboardSuperAdmin')" v-if="authStore.isSuperAdmin">
+          <template #icon>
+            <DashboardOutlined />
+          </template>
+          <span>Dashboard</span>
         </a-menu-item>
 
-        <a-menu-item key="movimentacoes" @click="goTo('Movimentacoes')" v-if="authStore.isAdmin">
-          <template #icon><swap-outlined /></template>
-          <span>Movimentações</span>
-        </a-menu-item>
-
-        <a-menu-item key="garcons" @click="goTo('garcons')" v-if="authStore.isAdmin">
-          <template #icon><user-group-outlined /></template>
-          <span>Garçons</span>
-        </a-menu-item>
       </a-menu>
 
     </a-layout-sider>
 
-    <a-layout :style="{ marginLeft: layoutMargin, transition: 'margin-left 0.2s' }">
+    <a-layout :style="{ transition: 'margin-left 0.2s' }">
 
       <a-layout-header class="app-header">
         <component :is="collapsed ? MenuUnfoldOutlined : MenuFoldOutlined" class="trigger" @click="toggleSider" />
@@ -56,7 +63,7 @@
         <div class="header-right">
 
           <div class="user-info-header">
-            <a-avatar :size="30" style="background-color: #f56a00">{{ authStore.userName?.charAt(0) }}</a-avatar>
+            <a-avatar :size="30" :src="authStore.user.profileImage" />
             <div class="user-details-header">
               <span class="user-name-header">{{ authStore.userName }}</span>
               <span class="user-role-header">{{ authStore.userRole }}</span>
@@ -82,13 +89,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {
   DashboardOutlined, MenuUnfoldOutlined, MenuFoldOutlined,
-  BoxPlotOutlined, StockOutlined, UserSwitchOutlined,
-  SwapOutlined, UserOutlined as UserGroupOutlined, ShopOutlined,
+  BoxPlotOutlined, StockOutlined, UserOutlined as UserGroupOutlined, ShopOutlined,
   LogoutOutlined
 } from '@ant-design/icons-vue';
 
@@ -102,17 +108,10 @@ const isMobile = ref(false);
 const selectedKeys = ref<string[]>([]);
 const openKeys = ref<string[]>([]);
 
-const layoutMargin = computed(() => {
-  if (isMobile.value) {
-    return '0px';
-  }
-  return collapsed.value ? '80px' : '200px';
-});
-
 const onSiderCollapse = (collapsedState: boolean, type: 'clickTrigger' | 'responsive') => {
   if (type === 'responsive') {
     collapsed.value = collapsedState;
-    isMobile.value = collapsedState; 
+    isMobile.value = collapsedState;
   } else {
     collapsed.value = collapsedState;
   }
@@ -138,22 +137,16 @@ const goTo = (name: string) => {
   }
 };
 
-// Lógica para manter o item de menu selecionado
 const updateMenuSelection = (currentRoute: typeof route) => {
   const routeName = currentRoute.name as string;
 
-  if (routeName === 'AdminPanel') selectedKeys.value = ['produtos'];
-  else if (routeName === 'VendaGarcom') selectedKeys.value = ['vendas'];
+  if (routeName === 'ProdutosAdmin') selectedKeys.value = ['produtos'];
+  else if (routeName === 'MesaSelection') selectedKeys.value = ['vendas'];
   else if (routeName === 'Dashboard') selectedKeys.value = ['dashboard'];
+  else if (routeName === 'EstoqueAdmin') selectedKeys.value = ['estoque'];
+  else if (routeName === 'Users') selectedKeys.value = ['users'];
+  else if (routeName === 'DashboardSuperAdmin') selectedKeys.value = ['dashboard_super_admin'];
   else selectedKeys.value = [];
-
-  if (routeName === 'Produtos' || routeName === 'Estoque' || routeName === 'Fornecedores' || routeName === 'Movimentacoes') {
-    openKeys.value = ['gerenciamento'];
-  } else if (routeName === 'Sistema' || routeName === 'Usuarios') {
-    openKeys.value = ['config'];
-  } else {
-    openKeys.value = [];
-  }
 };
 
 watch(route, (newRoute) => {
@@ -257,6 +250,10 @@ const onOpenChange = (currentOpenKeys: string[]) => {
   position: sticky;
   top: 0;
   z-index: 9;
+}
+
+.app-header :deep(.anticon-menu-unfold) {
+  padding-left: 0;
 }
 
 .trigger {
