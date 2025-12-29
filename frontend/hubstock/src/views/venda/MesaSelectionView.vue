@@ -4,8 +4,7 @@
 
         <div class="mesas-grid-large">
             <a-card v-for="mesa in mesas" :key="mesa.id" hoverable
-                :class="['mesa-card', { 'mesa-active': mesa.id === selectedMesaId }]"
-                @click="selectMesa(mesa.id)">
+                :class="['mesa-card', { 'mesa-active': mesa.id === selectedMesaId }]" @click="selectMesa(mesa.id)">
                 <a-badge :count="mesa.items.length" :offset="[20, -5]" :dot="mesa.items.length > 0">
                     <template #title>Itens no Pedido</template>
                     <div class="mesa-number">Mesa {{ mesa.id }}</div>
@@ -37,10 +36,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.selection-container :deep(.ant-page-header) {
+    padding-left: 0;
+}
+
 .selection-container {
     padding: 20px;
     text-align: center;
 }
+
 .mesas-grid-large {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -48,6 +52,7 @@ onMounted(() => {
     max-width: 900px;
     margin: 30px auto;
 }
+
 .mesa-card {
     cursor: pointer;
     text-align: center;
@@ -56,13 +61,16 @@ onMounted(() => {
     padding: 10px;
     transition: all 0.3s;
 }
+
 .mesa-card:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 .mesa-active {
     border-color: #1890ff;
     background-color: #e6f7ff;
 }
+
 .mesa-number {
     font-size: 1.8em;
     font-weight: bold;

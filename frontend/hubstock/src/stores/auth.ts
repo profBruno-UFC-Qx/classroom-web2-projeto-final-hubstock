@@ -6,6 +6,7 @@ interface AuthState {
     token: string | null;
     userRole: UserRole | null;
     userName: string | null;
+    userEmail: string | null;
     userId: string | null;
     profileImageUrl: string | null;
 }
@@ -24,6 +25,7 @@ export const useAuthStore = defineStore('auth', {
         token: localStorage.getItem('hubstock_token') || null,
         userRole: (localStorage.getItem('hubstock_role') as UserRole) || null,
         userName: localStorage.getItem('hubstock_user') || null,
+        userEmail: localStorage.getItem('hubstock_email') || null,
         userId: localStorage.getItem('hubstock_userId') || null,
         profileImageUrl: localStorage.getItem('hubstock_profileImage') || null,
     }),
@@ -38,6 +40,7 @@ export const useAuthStore = defineStore('auth', {
             id: state.userId,
             role: state.userRole,
             name: state.userName,
+            email: state.userEmail,
             profileImage: state.profileImageUrl,
         }),
     },
@@ -76,12 +79,14 @@ export const useAuthStore = defineStore('auth', {
             this.userRole = user.role;
             this.userName = user.name;
             this.userId = user.id;
+            this.userEmail = user.email;
             this.profileImageUrl = profileImage;
 
             localStorage.setItem('hubstock_token', mockToken);
             localStorage.setItem('hubstock_role', user.role ?? '');
             localStorage.setItem('hubstock_user', user.name);
             localStorage.setItem('hubstock_userId', user.id);
+            localStorage.setItem('hubstock_email', user.email);
             localStorage.setItem('hubstock_profileImage', profileImage || '');
 
             console.log(`Login bem-sucedido para: ${this.userName} (${this.userRole})`);
@@ -92,17 +97,21 @@ export const useAuthStore = defineStore('auth', {
             this.token = null;
             this.userRole = null;
             this.userName = null;
+            this.userId = null;
+            this.userEmail = null;
+            this.profileImageUrl = null;
 
             localStorage.removeItem('hubstock_token');
             localStorage.removeItem('hubstock_role');
             localStorage.removeItem('hubstock_user');
             localStorage.removeItem('hubstock_userId');
+            localStorage.removeItem('hubstock_email');
             localStorage.removeItem('hubstock_profileImage');
 
             console.log('Logout realizado com sucesso.');
         },
 
-        hasRequiredRole(roleToCheck: UserRole): boolean {
+        hasRequiredRole(roleToCheck: UserRole | UserRole[]): boolean {
             // O Super Admin tem acesso a tudo, exceto rotas exclusivas de outro nível
             if (this.userRole === 'SUPERADMINISTRADOR' && roleToCheck !== null) {
                 return true;

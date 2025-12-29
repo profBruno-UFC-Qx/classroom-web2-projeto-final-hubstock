@@ -102,6 +102,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.usuarios-container :deep(.ant-page-header) {
+    padding-left: 0;
+}
+
 .usuarios-container {
     padding: 20px;
 }
@@ -110,5 +114,4 @@ onMounted(() => {
     flex-direction: column;
     align-items: flex-start;
 }
-
 </style>

@@ -1,55 +1,42 @@
 <template>
-  <div class="bi-container">
-    <a-page-header 
-        :title="restaurantName" 
-        @back="() => $router.back()"
-    />
+    <div class="bi-container">
+        <a-page-header :title="restaurantName" @back="() => $router.back()" />
 
-    <a-alert v-if="biStore.error" :message="biStore.error" type="error" show-icon style="margin-bottom: 25px;" />
+        <a-alert v-if="biStore.error" :message="biStore.error" type="error" show-icon style="margin-bottom: 25px;" />
 
-    <a-spin :spinning="biStore.isLoading">
-        
-        <a-card title="Faturamento e Lucro Histórico" style="margin-bottom: 30px;">
-            <a-table 
-                :columns="revenueColumns" 
-                :data-source="biStore.revenueHistory" 
-                row-key="month"
-                size="small"
-                :pagination="false"
-            >
-                <template #bodyCell="{ column, record }">
-                    <template v-if="column.key === 'value'">
-                        <span :style="{ color: record.profit > 0 ? '#52c41a' : '#f5222d' }">
-                            R$ {{ record.revenue.toFixed(2) }}
-                        </span>
-                    </template>
-                    <template v-if="column.key === 'profit'">
-                         <a-tag :color="record.profit > 0 ? 'success' : 'error'">
-                            R$ {{ record.profit.toFixed(2) }}
-                        </a-tag>
-                    </template>
-                </template>
-            </a-table>
-        </a-card>
+        <a-spin :spinning="biStore.isLoading">
 
-        <a-card title="Top 10 Produtos Mais Vendidos" style="margin-bottom: 30px;">
-             <a-table 
-                :columns="topSellersColumns" 
-                :data-source="biStore.topSellers" 
-                row-key="productId"
-                size="small"
-                :pagination="false"
-            >
-                <template #bodyCell="{ column, record }">
-                    <template v-if="column.key === 'totalRevenue'">
-                        R$ {{ record.totalRevenue.toFixed(2) }}
+            <a-card title="Faturamento e Lucro Histórico" style="margin-bottom: 30px;">
+                <a-table :columns="revenueColumns" :data-source="biStore.revenueHistory" row-key="month" size="small"
+                    :pagination="false">
+                    <template #bodyCell="{ column, record }">
+                        <template v-if="column.key === 'value'">
+                            <span :style="{ color: record.profit > 0 ? '#52c41a' : '#f5222d' }">
+                                R$ {{ record.revenue.toFixed(2) }}
+                            </span>
+                        </template>
+                        <template v-if="column.key === 'profit'">
+                            <a-tag :color="record.profit > 0 ? 'success' : 'error'">
+                                R$ {{ record.profit.toFixed(2) }}
+                            </a-tag>
+                        </template>
                     </template>
-                </template>
-             </a-table>
-        </a-card>
-        
-    </a-spin>
-  </div>
+                </a-table>
+            </a-card>
+
+            <a-card title="Top 10 Produtos Mais Vendidos" style="margin-bottom: 30px;">
+                <a-table :columns="topSellersColumns" :data-source="biStore.topSellers" row-key="productId" size="small"
+                    :pagination="false">
+                    <template #bodyCell="{ column, record }">
+                        <template v-if="column.key === 'totalRevenue'">
+                            R$ {{ record.totalRevenue.toFixed(2) }}
+                        </template>
+                    </template>
+                </a-table>
+            </a-card>
+
+        </a-spin>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -83,10 +70,10 @@ const topSellersColumns = [
 
 const fetchRestaurantName = async () => {
     // Garante que a lista de restaurantes esteja carregada
-    await restaurantStore.loadRestaurants(); 
-    
+    await restaurantStore.loadRestaurants();
+
     const restaurant = restaurantStore.restaurants.find(r => r.id === restId);
-    
+
     if (restaurant) {
         restaurantName.value = restaurant.name;
     } else {
@@ -96,15 +83,20 @@ const fetchRestaurantName = async () => {
 
 onMounted(() => {
     biStore.loadRestaurantBI(restId);
-    
+
     fetchRestaurantName();
 });
 </script>
 
 <style scoped>
+.bi-container :deep(.ant-page-header) {
+    padding-left: 0;
+}
+
 .bi-container {
     padding: 20px;
 }
+
 .bi-container :deep(.ant-page-header-heading) {
     display: flex;
     flex-direction: column;

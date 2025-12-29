@@ -110,6 +110,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.estoque-container :deep(.ant-page-header) {
+    padding-left: 0;
+}
+
 .estoque-container {
     padding: 20px;
 }

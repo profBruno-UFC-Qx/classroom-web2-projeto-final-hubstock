@@ -75,3 +75,10 @@ export interface PublicRegistrationPayload {
     adminEmail: string;
     adminPassword: string;
 }
+
+// Atualização de usuário
+export interface UpdateUserPayload {
+    name: string;
+    email: string;
+    newPassword?: string;
+}

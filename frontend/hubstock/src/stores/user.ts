@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia';
 import { userService } from '@/services/UserService';
-import type { User, UserRole, PublicRegistrationPayload, Restaurant } from '@/types/entity-types';
+import type { User, UserRole, PublicRegistrationPayload, Restaurant, UpdateUserPayload } from '@/types/entity-types';
 import { ref } from 'vue';
 import { message } from 'ant-design-vue';
 import { MOCKED_USERS } from '@/api/mockData';
 import { restaurantService } from '@/services/RestaurantService';
+import { useAuthStore } from './auth';
 
 interface NewUserMockData {
     name: string;
@@ -53,6 +54,53 @@ export const useUserStore = defineStore('user', () => {
         users.value.push(newUser);
 
         return newUser;
+    }
+
+    async function updateUserProfile(userId: string, payload: UpdateUserPayload): Promise<void> {
+        error.value = null;
+        isLoading.value = true;
+
+        try {
+            const userIndex = MOCKED_USERS.findIndex(u => u.id === userId);
+
+            if (userIndex === -1) {
+                throw new Error("Usuário não encontrado no mock.");
+            }
+
+            // 1. Atualizar o Mock de Dados (simulação de backend)
+            const mockUser = MOCKED_USERS[userIndex];
+            if (!mockUser) {
+                throw new Error("Usuário não encontrado no mock.");
+            }
+            mockUser.name = payload.name;
+            mockUser.email = payload.email;
+            
+            // 2. Atualizar o Estado do Pinia (users list)
+            const index = users.value.findIndex(u => u.id === userId);
+            if (index !== -1) {
+                users.value[index].name = payload.name;
+                users.value[index].email = payload.email;
+            }
+
+            // 3. Atualizar o Estado de Autenticação (Para refletir no Header/Layout)
+            const authStore = useAuthStore();
+            authStore.userName = payload.name; 
+            
+            // 4. Persistir no LocalStorage
+            localStorage.setItem('hubstock_user', payload.name);
+
+            if (payload.newPassword) {
+                // Simulação: se a senha foi alterada, o token seria reemitido.
+                console.log(`Senha do usuário ${userId} foi alterada (Mock).`);
+            }
+
+        } catch (e: unknown) {
+            error.value = (e as Error).message || 'Falha ao salvar as alterações de perfil.';
+            message.error(error.value);
+            throw e;
+        } finally {
+            isLoading.value = false;
+        }
     }
 
     // Atualiza o papel de um user
@@ -125,5 +173,6 @@ export const useUserStore = defineStore('user', () => {
         changeUserRole,
         deleteUser,
         registerNewRestaurantAndAdmin,
+        updateUserProfile
     };
 });

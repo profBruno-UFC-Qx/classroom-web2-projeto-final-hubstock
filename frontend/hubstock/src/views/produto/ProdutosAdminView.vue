@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-container">
+  <div class="produto-container">
     <a-page-header title="Gerenciamento de Produtos" />
 
     <a-button type="primary" style="margin-bottom: 20px;" @click="openCreateModal">
@@ -15,8 +15,7 @@
       <template #bodyCell="{ column, record }">
 
         <template v-if="column.key === 'image'">
-          <img :src="record.imageUrl" alt="Imagem do Produto" class="product-thumb" 
-               @error="handleImageError(record)" />
+          <img :src="record.imageUrl" alt="Imagem do Produto" class="product-thumb" @error="handleImageError(record)" />
         </template>
 
         <template v-if="column.key === 'currentStock'">
@@ -72,8 +71,8 @@ const columns = [
 ];
 
 const handleImageError = (record: Product) => {
-    // Quando a URL falha, substitui pela imagem de fallback
-    record.imageUrl = FALLBACK_IMAGE_URL; 
+  // Quando a URL falha, substitui pela imagem de fallback
+  record.imageUrl = FALLBACK_IMAGE_URL;
 };
 
 // Criar
@@ -109,20 +108,24 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.admin-container :deep(.ant-page-header-heading-title) {
+.produto-container :deep(.ant-page-header) {
+  padding-left: 0;
+}
+
+.produto-container :deep(.ant-page-header-heading-title) {
   flex-direction: column;
   align-items: flex-start;
 }
 
 .product-thumb {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
-    vertical-align: middle;
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  vertical-align: middle;
 }
 
-.admin-container {
+.produto-container {
   padding: 20px;
 }
 </style>

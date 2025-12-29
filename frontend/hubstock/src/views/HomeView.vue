@@ -38,8 +38,8 @@
 
         <a-divider style="margin: 15px 0;" />
         <p class="cadastro-link-login">
-            Não tem seu restaurante cadastrado? 
-            <router-link to="/cadastro">Cadastre-se aqui</router-link>
+          Não tem seu restaurante cadastrado?
+          <router-link to="/cadastro">Cadastre-se aqui</router-link>
         </p>
 
       </div>
@@ -85,6 +85,10 @@ async function handleLogin() {
 </script>
 
 <style scoped>
+.home-container :deep(.ant-page-header) {
+  padding-left: 0;
+}
+
 .home-container {
   text-align: center;
   padding-bottom: 50px;
@@ -236,20 +240,20 @@ async function handleLogin() {
 }
 
 .cadastro-link-login {
-    text-align: center;
-    font-size: 0.9em;
-    color: #6c757d;
+  text-align: center;
+  font-size: 0.9em;
+  color: #6c757d;
 }
 
 .cadastro-link-login a {
-    color: #42b983;
-    font-weight: bold;
-    text-decoration: none;
-    transition: color 0.2s;
+  color: #42b983;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.2s;
 }
 
 .cadastro-link-login a:hover {
-    color: #38a169;
-    text-decoration: underline;
+  color: #38a169;
+  text-decoration: underline;
 }
 </style>

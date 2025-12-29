@@ -40,7 +40,7 @@
 
         <a-menu-item key="users" @click="goTo('Users')" v-if="authStore.isAdmin">
           <template #icon>
-            <UserGroupOutlined />
+            <UsergroupAddOutlined />
           </template>
           <span>Usuários</span>
         </a-menu-item>
@@ -49,6 +49,11 @@
             <DashboardOutlined />
           </template>
           <span>Dashboard</span>
+        </a-menu-item>
+        <!-- <a-divider /> -->
+        <a-menu-item key="perfil" @click="goTo('UserProfile')">
+          <template #icon><user-outlined /></template>
+          <span>Meu Perfil</span>
         </a-menu-item>
 
       </a-menu>
@@ -94,8 +99,8 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {
   DashboardOutlined, MenuUnfoldOutlined, MenuFoldOutlined,
-  BoxPlotOutlined, StockOutlined, UserOutlined as UserGroupOutlined, ShopOutlined,
-  LogoutOutlined
+  BoxPlotOutlined, StockOutlined, ShopOutlined,
+  LogoutOutlined, UserOutlined, UsergroupAddOutlined
 } from '@ant-design/icons-vue';
 
 const router = useRouter();
@@ -146,6 +151,7 @@ const updateMenuSelection = (currentRoute: typeof route) => {
   else if (routeName === 'EstoqueAdmin') selectedKeys.value = ['estoque'];
   else if (routeName === 'Users') selectedKeys.value = ['users'];
   else if (routeName === 'DashboardSuperAdmin') selectedKeys.value = ['dashboard_super_admin'];
+  else if (routeName === 'UserProfile') selectedKeys.value = ['perfil'];
   else selectedKeys.value = [];
 };
 

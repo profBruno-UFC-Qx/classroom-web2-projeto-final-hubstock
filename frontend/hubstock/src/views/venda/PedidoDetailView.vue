@@ -26,7 +26,7 @@
                         <template #renderItem="{ item }">
                             <a-list-item>
                                 <a-list-item-meta :title="`${item.name}`"> <template #description>R$ {{
-                                        item.price.toFixed(2) }}</template>
+                                    item.price.toFixed(2) }}</template>
                                 </a-list-item-meta>
 
                                 <QuantityControl :item="item" @update-quantity="updateItemQuantity"
@@ -85,14 +85,14 @@ const drawerWidth = computed(() => window.innerWidth > 1000 ? 500 : '100%');
 
 const updateItemQuantity = (productId: number, newQuantity: number) => {
     if (!currentMesa.value) return;
-    
+
     const item = currentMesa.value.items.find(i => i.productId === productId);
     if (!item) return;
-    
+
     const product = productStore.products.find(p => p.id === productId);
     if (product && newQuantity > product.currentStock) {
         message.warning(`Estoque máximo atingido para ${item.name}!`);
-        return; 
+        return;
     }
 
     item.quantity = newQuantity;
@@ -108,21 +108,21 @@ const mesaTotal = computed(() => {
 
 const addProductToMesa = (product: Product) => {
     if (!currentMesa.value) return;
-    
+
     const existingItem = currentMesa.value.items.find(i => i.productId === product.id);
 
     const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
 
     if (newQuantity > product.currentStock) {
         message.warning(`Estoque insuficiente! Disponível: ${product.currentStock}.`);
-        return; 
+        return;
     }
 
     if (existingItem) {
         existingItem.quantity = newQuantity;
     } else {
         currentMesa.value.items.push({
-            id: Date.now(), 
+            id: Date.now(),
             name: product.name,
             price: product.salePrice,
             productId: product.id,
@@ -134,7 +134,7 @@ const addProductToMesa = (product: Product) => {
 
 const removeItemFromMesaById = (productId: number) => {
     if (!currentMesa.value) return;
-    
+
     currentMesa.value.items = currentMesa.value.items.filter(i => i.productId !== productId);
     message.info('Item removido do pedido.');
 };
@@ -176,6 +176,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.pedido-detail-container :deep(.ant-page-header) {
+    padding-left: 0;
+}
+
 .pedido-detail-container {
     padding: 10px 20px;
 }
@@ -193,12 +197,13 @@ onMounted(() => {
 .ant-list-item :deep(.ant-list-item-meta-title) {
     font-weight: bold;
 }
+
 .ant-list-item :deep(.ant-list-item-meta-description) {
     color: #42b983;
 }
 
 .item-total-price {
-    margin-left: auto; 
+    margin-left: auto;
     padding-left: 10px;
     font-size: 1.1em;
 }

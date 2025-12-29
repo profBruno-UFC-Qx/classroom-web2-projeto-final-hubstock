@@ -12,6 +12,7 @@ import DashboardSuperAdmin from '@/views/super-admin/DashboardSuperAdminView.vue
 import DashboardAdmin from '@/views/admin/dashboard/DashboardAdminView.vue';
 import RestaurantBIView from '@/views/super-admin/RestaurantBIView.vue';
 import CadastroRestauranteView from '@/views/CadastroRestauranteView.vue';
+import UserProfileView from '@/views/users/UserProfileView.vue';
 
 type AppRouteRecordRaw = RouteRecordRaw & {
   meta?: {
@@ -107,6 +108,15 @@ const routes: Array<AppRouteRecordRaw> = [
     meta: {
       requiresAuth: true,
       requiredRole: 'SUPERADMINISTRADOR',
+    },
+  },
+  {
+    path: '/perfil',
+    name: 'UserProfile',
+    component: UserProfileView,
+    meta: {
+      requiresAuth: true,
+      requiredRole: 'GARCOM',
     },
   },
   {

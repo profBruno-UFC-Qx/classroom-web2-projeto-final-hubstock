@@ -1,6 +1,6 @@
 <template>
     <div class="relatorios-container">
-        <a-page-header title="Resumo de Vendas e Lucros" />
+        <a-page-header title="Resumo de Vendas e Lucros" class="title-header" />
 
         <a-alert v-if="reportStore.error" :message="reportStore.error" type="error" show-icon
             style="margin-bottom: 25px;" />
@@ -52,7 +52,7 @@
                     </template>
                     <template v-if="column.key === 'totalProfit'">
                         <a-tag :color="record.totalProfit > 0 ? 'success' : 'error'">R$ {{ record.totalProfit.toFixed(2)
-                            }}</a-tag>
+                        }}</a-tag>
                     </template>
                     <template v-if="column.key === 'date'">
                         {{ formatDate(record.date) }}
@@ -89,6 +89,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.relatorios-container :deep(.ant-page-header) {
+    padding-left: 0;
+}
+
 .relatorios-container {
     padding: 20px;
 }

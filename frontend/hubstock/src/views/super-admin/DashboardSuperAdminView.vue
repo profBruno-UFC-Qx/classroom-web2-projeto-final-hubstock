@@ -43,6 +43,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.restaurantes-container :deep(.ant-page-header) {
+    padding-left: 0;
+}
+
 .restaurantes-container :deep(.ant-page-header-heading) {
     display: flex;
     flex-direction: column;
