@@ -11,7 +11,7 @@
       style="margin-bottom: 15px;" />
 
     <a-table :columns="columns" :data-source="productStore.enrichedProducts" :loading="productStore.isLoading"
-      row-key="id">
+      row-key="id" :scroll="{ x: 900 }">
       <template #bodyCell="{ column, record }">
 
         <template v-if="column.key === 'image'">
@@ -25,24 +25,41 @@
         </template>
 
         <template v-if="column.key === 'action'">
-          <a-button type="link" @click="openEditModal(record)">
-            <template #icon><edit-outlined /></template>
-            Editar
-          </a-button>
-          <a-divider type="vertical" />
-          <a-popconfirm title="Tem certeza que deseja deletar este produto?" ok-text="Sim" cancel-text="Não"
-            @confirm="confirmDelete(record.id, record.name)">
-            <a-button type="link" danger>
-              <template #icon><delete-outlined /></template>
-              Excluir
-            </a-button>
-          </a-popconfirm>
+          <a-space :size="0">
+            <a-tooltip title="Entrada de Estoque">
+              <a-button type="link" @click="openStockModal(record)" style="color: #fa8c16">
+                <template #icon><import-outlined /></template>
+              </a-button>
+            </a-tooltip>
+
+            <a-divider type="vertical" />
+
+            <a-tooltip title="Editar Produto">
+              <a-button type="link" @click="openEditModal(record)">
+                <template #icon><edit-outlined /></template>
+              </a-button>
+            </a-tooltip>
+
+            <a-divider type="vertical" />
+
+            <a-popconfirm title="Deletar este produto?" ok-text="Sim" cancel-text="Não"
+              @confirm="confirmDelete(record.id, record.name)">
+              <a-tooltip title="Excluir Produto">
+                <a-button type="link" danger>
+                  <template #icon><delete-outlined /></template>
+                </a-button>
+              </a-tooltip>
+            </a-popconfirm>
+          </a-space>
         </template>
       </template>
     </a-table>
 
-    <ProductForm :open="isModalVisible" :product="selectedProduct" @close="closeModal"
+    <ProductForm :open="isEditModalVisible" :product="selectedProduct" @close="closeModal"
       @saved="productStore.loadAllData(true)" />
+
+    <StockEntryForm :open="isStockModalVisible" :product="selectedProduct" :isLoading="productStore.isLoading"
+      @close="closeStockModal" @confirm="handleStockConfirm" />
   </div>
 </template>
 
@@ -52,23 +69,80 @@ import { useProductStore } from '@/stores/product';
 import type { Product } from '@/types/entity-types';
 import ProductForm from '@/components/ProductForm.vue';
 import { message } from 'ant-design-vue';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ImportOutlined } from '@ant-design/icons-vue';
+import StockEntryForm from './StockEntryForm.vue';
 
 const productStore = useProductStore();
 const FALLBACK_IMAGE_URL = 'https://placehold.co/50x50/D9D9D9/888888?text=P';
 
-const isModalVisible = ref(false);
+const isEditModalVisible = ref(false);
+const isStockModalVisible = ref(false);
 const selectedProduct = ref<Product | null>(null);
 
 // Colunas da tabela
 const columns = [
-  { title: 'Imagem', dataIndex: 'imageUrl', key: 'image', width: 80 },
-  { title: 'Nome', dataIndex: 'name', key: 'name', sorter: (a: Product, b: Product) => a.name.localeCompare(b.name) },
-  { title: 'Categoria', dataIndex: 'categoryName', key: 'categoryName' },
-  { title: 'Estoque', dataIndex: 'currentStock', key: 'currentStock', width: 120, sorter: (a: Product, b: Product) => a.currentStock - b.currentStock },
-  { title: 'Preço Venda (R$)', dataIndex: 'salePrice', key: 'salePrice', width: 150, customRender: ({ text }: { text: number }) => `R$ ${text.toFixed(2)}` },
-  { title: 'Ações', key: 'action', width: 180 },
+  {
+    title: 'Imagem',
+    dataIndex: 'imageUrl',
+    key: 'image',
+    width: 80,
+  },
+  {
+    title: 'Nome',
+    dataIndex: 'name',
+    key: 'name',
+    width: 200, // Largura fixa para evitar quebra de texto excessiva
+    sorter: (a: Product, b: Product) => a.name.localeCompare(b.name)
+  },
+  {
+    title: 'Categoria',
+    dataIndex: 'categoryName',
+    key: 'categoryName',
+    width: 150
+  },
+  {
+    title: 'Estoque',
+    dataIndex: 'currentStock',
+    key: 'currentStock',
+    width: 120,
+    sorter: (a: Product, b: Product) => a.currentStock - b.currentStock
+  },
+  {
+    title: 'Preço Venda',
+    dataIndex: 'salePrice',
+    key: 'salePrice',
+    width: 130,
+    customRender: ({ text }: { text: number }) => `R$ ${text.toFixed(2)}`
+  },
+  {
+    title: 'Ações',
+    key: 'action',
+    width: 130,
+    fixed: 'right',
+    align: 'center'
+  },
 ];
+
+const openStockModal = (product: Product) => {
+  selectedProduct.value = product;
+  isStockModalVisible.value = true;
+};
+
+const closeStockModal = () => {
+  isStockModalVisible.value = false;
+  selectedProduct.value = null;
+};
+
+const handleStockConfirm = async (data: { productId: number, quantity: number, notes: string }) => {
+  try {
+    await productStore.registerEntry(data.productId, data.quantity, data.notes);
+    message.success('Estoque atualizado!');
+    closeStockModal();
+  } catch (e) {
+    message.error('Erro ao atualizar estoque');
+    console.error('Erro ao atualizar estoque: ', e);
+  }
+};
 
 const handleImageError = (record: Product) => {
   // Quando a URL falha, substitui pela imagem de fallback
@@ -78,17 +152,17 @@ const handleImageError = (record: Product) => {
 // Criar
 const openCreateModal = () => {
   selectedProduct.value = null;
-  isModalVisible.value = true;
+  isEditModalVisible.value = true;
 };
 
 // Editar
 const openEditModal = (product: Product) => {
   selectedProduct.value = product;
-  isModalVisible.value = true;
+  isEditModalVisible.value = true;
 };
 
 const closeModal = () => {
-  isModalVisible.value = false;
+  isEditModalVisible.value = false;
   selectedProduct.value = null;
 };
 
@@ -108,6 +182,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.produto-container {
+  padding: 20px;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 .produto-container :deep(.ant-page-header) {
   padding-left: 0;
 }
@@ -118,14 +198,23 @@ onMounted(() => {
 }
 
 .product-thumb {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  /* Reduzi um pouco para equilibrar com os botões */
+  height: 40px;
   object-fit: cover;
   border-radius: 4px;
-  vertical-align: middle;
 }
 
-.produto-container {
-  padding: 20px;
+.actions-cell :deep(.ant-btn) {
+  padding: 4px 8px;
+}
+
+:deep(.ant-table-content) {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+:deep(.ant-table-cell) {
+  white-space: nowrap;
 }
 </style>

@@ -6,13 +6,13 @@ import ProdutosAdminView from '../views/produto/ProdutosAdminView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 import PedidoDetailView from '@/views/venda/PedidoDetailView.vue';
 import MesaSelectionView from '@/views/venda/MesaSelectionView.vue';
-import EstoqueView from '@/views/estoque/EstoqueView.vue';
 import UsuariosView from '@/views/users/UsuariosView.vue';
 import DashboardSuperAdmin from '@/views/super-admin/DashboardSuperAdminView.vue';
 import DashboardAdmin from '@/views/admin/dashboard/DashboardAdminView.vue';
 import RestaurantBIView from '@/views/super-admin/RestaurantBIView.vue';
 import CadastroRestauranteView from '@/views/CadastroRestauranteView.vue';
 import UserProfileView from '@/views/users/UserProfileView.vue';
+import AluguelView from '@/views/aluguel/AluguelView.vue';
 
 type AppRouteRecordRaw = RouteRecordRaw & {
   meta?: {
@@ -48,6 +48,15 @@ const routes: Array<AppRouteRecordRaw> = [
     },
   },
   {
+    path: '/alugueis',
+    name: 'AlugueisView',
+    component: AluguelView,
+    meta: {
+      requiresAuth: true,
+      requiredRole: 'GARCOM',
+    },
+  },
+  {
     path: '/venda/:mesaId',
     name: 'PedidoDetail',
     component: PedidoDetailView,
@@ -69,15 +78,6 @@ const routes: Array<AppRouteRecordRaw> = [
     path: '/produtos',
     name: 'ProdutosAdmin',
     component: ProdutosAdminView,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'ADMINISTRADOR',
-    },
-  },
-  {
-    path: '/estoque',
-    name: 'EstoqueAdmin',
-    component: EstoqueView,
     meta: {
       requiresAuth: true,
       requiredRole: 'ADMINISTRADOR',

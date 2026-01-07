@@ -3,19 +3,14 @@
         <a-page-header title="Painel de Controle Global" />
 
         <a-card title="Restaurantes Ativos" :loading="restaurantStore.isLoading">
-            <a-list item-layout="horizontal" :data-source="restaurantStore.restaurants">
+            <a-list item-layout="horizontal" :data-source="restaurantStore.restaurants" class="restaurant-list">
                 <template #renderItem="{ item }">
                     <a-list-item>
-                        <a-list-item-meta :title="item.name" :description="`CNPJ: ${item.cnpj}`">
+                        <a-list-item-meta :title="item.name" :description="`CNPJ: ${item.cnpj}`" @click="goToBIView(item.id)" class="restaurant-item">
                             <template #avatar>
                                 <a-avatar :src="item.profileImageUrl" size="large" />
                             </template>
                         </a-list-item-meta>
-
-                        <div>
-                            <a-button type="link" style="margin-right: 10px;"
-                                @click="goToBIView(item.id)">Detalhes</a-button>
-                        </div>
                     </a-list-item>
                 </template>
             </a-list>
@@ -57,30 +52,19 @@ onMounted(() => {
     padding: 20px;
 }
 
-@media (max-width: 600px) {
-    .restaurantes-container :deep(.ant-list-item-meta) {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+.restaurant-item {
+    cursor: pointer;
+}
 
-    .restaurantes-container :deep(.ant-list-item-meta-avatar) {
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
+.restaurant-item :deep(.ant-list-item-meta-title) {
+    color: #1890ff;
+}
 
-    .restaurantes-container :deep(.ant-list-item-meta-content) {
-        width: 100%;
-        min-width: 0;
-    }
+.restaurant-item :deep(.ant-list-item-meta-title):hover {
+    text-decoration: underline;
+}
 
-    .restaurantes-container :deep(.ant-list-item) {
-        flex-direction: column;
-        align-items: flex-start;
-        padding-bottom: 15px;
-    }
-
-    .list-actions {
-        margin-top: 15px;
-    }
+.restaurant-list :deep(.ant-list-item):hover {
+    background-color: #f5f5f5;
 }
 </style>

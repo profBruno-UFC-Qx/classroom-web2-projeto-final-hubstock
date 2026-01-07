@@ -17,6 +17,13 @@
           <span>Venda</span>
         </a-menu-item>
 
+        <a-menu-item key="alugueis" @click="goTo('AlugueisView')">
+          <template #icon>
+            <ClockCircleOutlined />
+          </template>
+          <span>Locações</span>
+        </a-menu-item>
+
         <a-menu-item key="dashboard" @click="goTo('Dashboard')" v-if="authStore.isAdmin">
           <template #icon>
             <DashboardOutlined />
@@ -29,13 +36,6 @@
             <BoxPlotOutlined />
           </template>
           <span>Produtos</span>
-        </a-menu-item>
-
-        <a-menu-item key="estoque" @click="goTo('EstoqueAdmin')" v-if="authStore.isAdmin">
-          <template #icon>
-            <StockOutlined />
-          </template>
-          <span>Estoque</span>
         </a-menu-item>
 
         <a-menu-item key="users" @click="goTo('Users')" v-if="authStore.isAdmin">
@@ -63,18 +63,25 @@
     <a-layout :style="{ transition: 'margin-left 0.2s' }">
 
       <a-layout-header class="app-header">
-        <component :is="collapsed ? MenuUnfoldOutlined : MenuFoldOutlined" class="trigger" @click="toggleSider" />
+        <div class="header-left">
+          <component :is="collapsed ? MenuUnfoldOutlined : MenuFoldOutlined" class="trigger" @click="toggleSider" />
+        </div>
 
-        <div class="header-right">
-
+        <div class="header-center">
           <div class="user-info-header">
-            <a-avatar :size="30" :src="authStore.user.profileImage" />
+            <a-avatar :size="32" :src="authStore.user.profileImage" />
             <div class="user-details-header">
-              <span class="user-name-header">{{ authStore.userName }}</span>
-              <span class="user-role-header">{{ authStore.userRole }}</span>
+              <a-typography-text strong class="user-name-header">
+                {{ authStore.userName }}
+              </a-typography-text>
+              <a-tag :color="roleColor" class="user-role-tag">
+                {{ authStore.userRole }}
+              </a-tag>
             </div>
           </div>
+        </div>
 
+        <div class="header-right">
           <a-button type="primary" danger @click="handleLogout">
             <template #icon><logout-outlined /></template>
             Sair
@@ -94,12 +101,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {
   DashboardOutlined, MenuUnfoldOutlined, MenuFoldOutlined,
-  BoxPlotOutlined, StockOutlined, ShopOutlined,
+  BoxPlotOutlined, ShopOutlined, ClockCircleOutlined,
   LogoutOutlined, UserOutlined, UsergroupAddOutlined
 } from '@ant-design/icons-vue';
 
@@ -112,6 +119,15 @@ const collapsed = ref(false);
 const isMobile = ref(false);
 const selectedKeys = ref<string[]>([]);
 const openKeys = ref<string[]>([]);
+
+const roleColor = computed(() => {
+  switch (authStore.userRole) {
+    case 'SUPERADMINISTRADOR': return 'purple';
+    case 'ADMINISTRADOR': return 'blue';
+    case 'GARCOM': return 'orange';
+    default: return 'default';
+  }
+});
 
 const onSiderCollapse = (collapsedState: boolean, type: 'clickTrigger' | 'responsive') => {
   if (type === 'responsive') {
@@ -148,7 +164,7 @@ const updateMenuSelection = (currentRoute: typeof route) => {
   if (routeName === 'ProdutosAdmin') selectedKeys.value = ['produtos'];
   else if (routeName === 'MesaSelection') selectedKeys.value = ['vendas'];
   else if (routeName === 'Dashboard') selectedKeys.value = ['dashboard'];
-  else if (routeName === 'EstoqueAdmin') selectedKeys.value = ['estoque'];
+  else if (routeName === 'AlugueisView') selectedKeys.value = ['alugueis'];
   else if (routeName === 'Users') selectedKeys.value = ['users'];
   else if (routeName === 'DashboardSuperAdmin') selectedKeys.value = ['dashboard_super_admin'];
   else if (routeName === 'UserProfile') selectedKeys.value = ['perfil'];
@@ -214,7 +230,6 @@ const onOpenChange = (currentOpenKeys: string[]) => {
   color: white !important;
 }
 
-
 .logo-container {
   height: 64px;
   margin: 16px 0;
@@ -264,30 +279,69 @@ const onOpenChange = (currentOpenKeys: string[]) => {
 
 .trigger {
   font-size: 18px;
-  padding-right: 24px;
   cursor: pointer;
   transition: color 0.3s;
+}
+
+.header-center {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .user-info-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-right: 15px;
+  gap: 12px;
+  background: #f5f5f5;
+  padding: 4px 20px 8px 10px;
+  border-radius: 50px;
 }
 
 .user-details-header {
   display: flex;
   flex-direction: column;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  align-items: flex-start;
   line-height: 1.2;
 }
 
+.user-name-header {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.user-role-tag {
+  font-size: 10px;
+  margin-right: 0;
+  margin-top: 2px;
+  line-height: 16px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.header-left,
 .header-right {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 20px;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+
+
+.user-tag-container {
+  margin-top: -2px;
+  /* Ajuste fino de posicionamento */
+}
+
+/* Garante que a tag fique pequena no header */
+:deep(.ant-tag) {
+  font-size: 10px;
+  line-height: 18px;
+  margin-right: 0;
 }
 </style>

@@ -82,3 +82,17 @@ export interface UpdateUserPayload {
     email: string;
     newPassword?: string;
 }
+
+export interface Aluguel {
+  id: number;
+  clienteNome: string;
+  clienteTelefone: string;
+  produtoId: number;
+  produtoNome: string;
+  produtoFotoUrl: string;
+  quantidade: number;
+  dataInicio: string;
+  limiteHoras: number;
+  status: 'ATIVO' | 'FINALIZADO' | 'ATRASADO';
+  valorTotal: number;
+}
