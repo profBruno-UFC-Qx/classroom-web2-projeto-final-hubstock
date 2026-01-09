@@ -1,31 +1,43 @@
-# :checkered_flag: NOME DO PROJETO
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/iVa2Dd1Z)
+[![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=21200888)
+# :checkered_flag: HubStock
 
-Breve descrição do que o seu projeto faz.
 
 ## :technologist: Membros da equipe
 
-Matrícula, nome e curso dos participantes.
+552882 - Sávio de Carvalho Soares - Engenharia de Software
 
 ## :bulb: Objetivo Geral
-Descrever o objetivo de geral do projeto
+O HubStock é um gerenciador de estoque de restaurantes, bares e etc. O seu objetivo é controlar o que entra e o que sai de mercadorias como bebidas, objetos para aluguel (hora/dia/semana), comidas e entre outras coisas.
 
 ## :eyes: Público-Alvo
-Público-alvo do projeto
+Dono de Restaurantes/Bares
 
 ## :star2: Impacto Esperado
-Descreva o impacto esperado do projeto em relação ao público alvo
+1. Espera-se que os estabelecimentos a serem atendidos tenham um maior controle e saibam a hora exata de repôr mercadorias. 
+2. Saibam quanto de vendas estão tendo no dia/mês/ano.
 
 ## :people_holding_hands: Papéis ou tipos de usuário da aplicação
-
-Informe aqui os tipos de usuário que irão interagir com a aplicação. Ex: administrador, locador, locatario, usuário não logado.
-
-> Tenha em mente que obrigatoriamente a aplicação deve possuir funcionalidades acessíveis a todos os tipos de usuário e outra funcionalidades restritas a certos tipos de usuários.
+Administrador e Garçom
 
 ## :triangular_flag_on_post:	 Principais funcionalidades da aplicação
+As funcionalidades do HubStock serão divididas para garantir que cada tipo de usuário (Administrador e Garçom) tenha as ferramentas necessárias para cumprir seu papel, mantendo a segurança e o controle de acesso.
 
-Descreve ou liste brevemente as principais funcionalidades da aplicação que será desenvolvida. Destaque a funcionalidades que serão acessévies a todos os usuários e aquelas restriras a usuários logados.
+| Funcionalidade | Acesso | Papéis de Acesso |
+| :--- | :--- | :--- |
+| **Login/Logout** | Acessível a todos os usuários. | Todos |
+| **Registro de Saída de Produto (Venda)** | Acessível a todos os usuários. | Garçom, Administrador |
+| **Visualizar Nível de Estoque** | Acessível a todos os usuários. | Garçom, Administrador |
+| **Gerenciar Produtos / Itens** | Restrita a certos tipos de usuários. | Administrador |
+| **Registro de Entrada de Mercadoria** | Restrita a certos tipos de usuários. | Administrador |
+| **Relatórios de Vendas e Lucros** | Restrita a certos tipos de usuários. | Administrador |
+| **Gerenciamento de Usuários** | Restrita a certos tipos de usuários. | Administrador |
 
 ## :spiral_calendar: Entidades ou tabelas do sistema
-
-Liste as principais entidades do sistema.
+1.  **USUARIO**
+2.  **CATEGORIA** (Para agrupar produtos - ex: Bebidas, Comidas, Aluguel)
+3.  **PRODUTO** (O estoque)
+4.  **MOVIMENTACAO_ESTOQUE** (Registra toda entrada e saída de PRODUTO)
+5.  **VENDA** (Registra as transações para os relatórios)
+6.  **ITEM_VENDA** (Os produtos que estavam em uma VENDA específica)
 
