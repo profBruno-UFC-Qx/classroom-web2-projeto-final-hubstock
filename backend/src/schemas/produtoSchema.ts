@@ -9,5 +9,11 @@ export const produtoSchema = z.object({
     precoVendaProduto: z.number().positive("Preço de venda deve ser maior que zero"),
     estoqueAtual: z.number().int().default(0),
     isLocacao: z.boolean().default(false),
-    urlImagemProduto: z.string().refine((url) => !url || /^https?:\/\/.+/.test(url), "URL da imagem inválida").optional().or(z.literal(""))
+    urlImagemProduto: z.url("URL da imagem inválida").optional().or(z.literal(""))
+});
+
+export const updateStockSchema = z.object({
+    quantidade: z.number().int().positive("A quantidade deve ser maior que zero"),
+    tipo: z.enum(['ENTRADA', 'SAIDA_PERDA']),
+    observacao: z.string().optional()
 });

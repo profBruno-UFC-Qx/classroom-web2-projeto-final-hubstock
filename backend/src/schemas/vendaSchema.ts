@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const vendaItemSchema = z.object({
-    produtoId: z.number({ message: "ID do produto é obrigatório" }).int().positive(),
-    quantidade: z.number().int().positive("A quantidade deve ser no mínimo 1")
+    produtoId: z.uuid("ID do produto inválido"),
+    quantidade: z.number().int().positive("Quantidade mínima é 1")
 });
 
 export const vendaSchema = z.object({

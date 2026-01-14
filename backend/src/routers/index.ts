@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/AuthController.js";
-import { AluguelController } from "../controllers/AluguelController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { ProdutoController } from "../controllers/ProdutoController.js";
 import { authorize } from "../middlewares/roleMiddleware.js";
@@ -9,15 +8,18 @@ import { VendaController } from "../controllers/VendaController.js";
 import { ReportController } from "../controllers/ReportController.js";
 import { RestauranteController } from "../controllers/RestauranteController.js";
 import { validate } from "../middlewares/validateMiddleware.js";
-import { usuarioCadastroSchema } from "../schemas/usuarioSchema.js";
-import { vendaSchema } from "../schemas/vendaSchema.js";
-import { aluguelSchema } from "../schemas/aluguelSchema.js";
-import { restauranteSchema } from "../schemas/restauranteSchema.js";
+import { loginSchema, usuarioCadastroSchema } from "../schemas/usuarioSchema.js";
+import { MesaController } from "../controllers/MesaController.js";
+import { produtoSchema, updateStockSchema } from "../schemas/produtoSchema.js";
+import { vendaItemSchema } from "../schemas/vendaSchema.js";
+import { publicRegisterSchema } from "../schemas/restauranteSchema.js";
 
 const routes = Router();
 
 // AUTENTICAÇÃO
-routes.post("/login", AuthController.login);
+routes.post("/login", validate(loginSchema), AuthController.login);
+
+routes.post("/public/register", validate(publicRegisterSchema), AuthController.register);
 
 
 // RESTAURANTES
@@ -27,12 +29,11 @@ routes.get(
     authorize(['SUPERADMINISTRADOR']),
     RestauranteController.listAll
 );
-routes.post(
-    "/restaurantes",
+routes.get(
+    "/restaurantes/:id",
     authMiddleware,
     authorize(['SUPERADMINISTRADOR']),
-    validate(restauranteSchema),
-    RestauranteController.create
+    RestauranteController.show
 );
 
 
@@ -50,61 +51,89 @@ routes.get(
     authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
     UsuarioController.list
 );
-
-
-// ALUGUEL
-routes.post(
-    "/alugueis",
+routes.put(
+    "/usuarios/:id",
     authMiddleware,
-    validate(aluguelSchema),
-    AluguelController.create
-);
-routes.get(
-    "/alugueis",
-    authMiddleware,
-    AluguelController.list
+    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
+    UsuarioController.update
 );
 routes.patch(
-    "/alugueis/:id/finalizar",
+    "/usuarios/:id/role",
     authMiddleware,
-    AluguelController.finalize
+    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
+    UsuarioController.updateRole
+);
+routes.delete(
+    "/usuarios/:id",
+    authMiddleware,
+    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
+    UsuarioController.delete
+);
+routes.get(
+    "/usuarios-restaurante",
+     authMiddleware,
+     authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
+     UsuarioController.listByRestaurante,
 );
 
 
 // PRODUTOS
-routes.get("/produtos", authMiddleware, ProdutoController.list);
-routes.get("/produtos/:id", authMiddleware, ProdutoController.getById);
-
+routes.get(
+    "/produtos",
+    authMiddleware,
+    ProdutoController.list
+);
+routes.get(
+    "/produtos/:id",
+    authMiddleware,
+    ProdutoController.getById
+);
 routes.post(
-    "/produtos", 
-    authMiddleware, 
-    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']), 
+    "/produtos",
+    authMiddleware,
+    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
+    validate(produtoSchema),
     ProdutoController.create
 );
 routes.put(
-    "/produtos/:id", 
-    authMiddleware, 
-    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']), 
+    "/produtos/:id",
+    authMiddleware,
+    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
+    validate(produtoSchema),
     ProdutoController.update
 );
 routes.delete(
-    "/produtos/:id", 
-    authMiddleware, 
-    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']), 
+    "/produtos/:id",
+    authMiddleware,
+    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
     ProdutoController.delete
 );
 routes.patch(
-    "/produtos/:id/estoque", 
-    authMiddleware, 
-    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']), 
-    ProdutoController.addStock
+    "/produtos/:id/estoque",
+    authMiddleware,
+    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
+    validate(updateStockSchema),
+    ProdutoController.updateStock
 );
 
+
+// VENDAS
 routes.post(
-    "/vendas", 
-    authMiddleware, 
-    validate(vendaSchema),
-    VendaController.create
+    "/vendas/adicionar-item",
+    authMiddleware,
+    validate(vendaItemSchema),
+    VendaController.adicionarItem
+);
+routes.post(
+    "/vendas/remover-item",
+    authMiddleware,
+    validate(vendaItemSchema),
+    VendaController.removerItem
+);
+routes.post(
+    "/vendas/finalizar/:mesaId",
+    authMiddleware,
+    VendaController.finalizarVenda
 );
 
 
@@ -114,6 +143,31 @@ routes.get(
     authMiddleware,
     authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
     ReportController.loadReports
+);
+routes.get(
+    "/relatorios/resumo",
+    authMiddleware,
+    authorize(['ADMINISTRADOR', 'SUPERADMINISTRADOR']),
+    ReportController.getSummary
+);
+routes.get(
+    "/relatorios/restaurante/:restId",
+    authMiddleware,
+    authorize(['SUPERADMINISTRADOR']),
+    ReportController.getRestaurantBI
+);
+
+
+// MESAS
+routes.get(
+    "/mesas",
+    authMiddleware,
+    MesaController.listByRestaurante
+);
+routes.get(
+    "/mesas/:mesaId/pedido-ativo",
+    authMiddleware,
+    MesaController.getPedidoAtivo
 );
 
 export default routes;

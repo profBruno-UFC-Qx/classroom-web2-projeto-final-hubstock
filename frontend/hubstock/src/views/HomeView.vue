@@ -6,12 +6,11 @@
     </div>
 
     <div class="content-section">
-      <div v-if="authStore.isAuthenticated" class="welcome-message">
-        <p>Você já está logado como **{{ authStore.userName }} ({{ authStore.userRole }})**.</p>
+      <div v-if="authStore.estaAutenticado" class="welcome-message">
+        <p>Você já está logado como **{{ authStore.usuario?.nome }} ({{ authStore.usuario?.papel }})**.</p>
         <router-link to="/dashboard" class="btn btn-primary">Ir para o Dashboard</router-link>
 
-        <router-link v-if="authStore.isAdmin" to="/admin" class="btn btn-secondary">Ir para Painel Admin</router-link>
-
+        <router-link v-if="authStore.usuario?.papel === 'ADMINISTRADOR'" to="/admin" class="btn btn-secondary">Ir para Painel Admin</router-link>
       </div>
 
       <div class="login-box">
@@ -19,13 +18,13 @@
         <form @submit.prevent="handleLogin" class="login-form">
 
           <div class="input-group">
-            <label for="username" class="label-forms">Usuário</label>
-            <input type="text" id="username" v-model="username" placeholder="savio, pedro, joao" required />
+            <label for="email" class="label-forms">Usuário</label>
+            <input type="text" id="email" v-model="email" placeholder="savio, pedro, joao" required />
           </div>
 
           <div class="input-group">
-            <label for="password">Senha</label>
-            <input type="password" id="password" v-model="password" placeholder="**************" required />
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" v-model="senha" placeholder="**************" required />
           </div>
 
           <button type="submit" :disabled="isLoading" class="login-button">
@@ -50,15 +49,15 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/authStore';
 import { redirectToUser } from '@/hooks/redirect';
 
 import { message } from 'ant-design-vue';
 
 const authStore = useAuthStore();
 
-const username = ref('');
-const password = ref('');
+const email = ref('');
+const senha = ref('');
 const isLoading = ref(false);
 const error = ref('');
 
@@ -67,16 +66,16 @@ async function handleLogin() {
   isLoading.value = true;
 
   try {
-    const response = await authStore.login(username.value, password.value);
+    const response = await authStore.login(email.value, senha.value);
 
-    if (response) {
+    if (response.sucesso) {
       message.success('Login realizado com sucesso!');
       redirectToUser();
     } else {
-      error.value = 'Usuário ou senha inválidos. Tente novamente.';
+      error.value = response.erro || 'Usuário ou senha inválidos.';
     }
-  } catch (err) {
-    error.value = 'Ocorreu um erro ao tentar logar.';
+  } catch (err: any) {
+    error.value = err.response?.data?.erro || 'Erro ao conectar com o servidor.';
     console.error('Erro de Login:', err);
   } finally {
     isLoading.value = false;

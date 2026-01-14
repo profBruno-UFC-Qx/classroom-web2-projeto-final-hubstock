@@ -4,8 +4,8 @@ import { UsuarioPapel } from "../types/index.js";
 
 @Entity("usuarios")
 export class Usuario {
-    @PrimaryGeneratedColumn()
-    id!: number;
+    @PrimaryGeneratedColumn("uuid")
+    id!: string;
 
     @Column({ type: "varchar" })
     nome!: string;
@@ -19,8 +19,8 @@ export class Usuario {
     @Column({ type: "varchar", default: UsuarioPapel.GARCOM })
     role!: UsuarioPapel;
 
-    @Column({ type: "int", nullable: true })
-    restauranteId!: number;
+    @Column({ type: "varchar", nullable: true })
+    restauranteId!: string;
 
     // Muitos usuários pertencem a um restaurante
     @ManyToOne(() => Restaurante, (restaurante) => restaurante.usuarios)

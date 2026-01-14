@@ -1,10 +1,10 @@
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/authStore';
 import router from '@/router';
 
 export function redirectToUser() {
     const authStore = useAuthStore();
     
-    switch (authStore.userRole) {
+    switch (authStore.usuario?.papel) {
         case 'SUPERADMINISTRADOR':
             router.push({ name: 'DashboardSuperAdmin' });
             break;

@@ -1,24 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
-declare global {
-    namespace Express {
-        interface Request {
-            usuarioId: number;
-            usuarioNome: string;
-            usuarioRole: string;
-            usuarioRestauranteId: number;
-        }
-    }
-}
-
-interface TokenPayload {
-    id: number;
-    role: string;
-    nome: string;
-    iat: number;
-    exp: number;
-}
+import type { TokenPayload } from "../types/index.js";
 
 export const authMiddleware = (
     req: Request,
@@ -35,15 +17,14 @@ export const authMiddleware = (
     const [, token] = authHeader.split(" ");
 
     try {
-        const secret = process.env["JWT_SECRET"] || "sua_chave_secreta";
-        const decoded = jwt.verify(token!, secret);
+        const secret = process.env["JWT_SECRET"] || "chave_secreta_hubstock";
+        const decoded = jwt.verify(token!, secret) as TokenPayload;
 
-        const { id, role, nome } = decoded as TokenPayload;
-
-        req.usuarioId = id;
-        req.usuarioNome = nome;
-        req.usuarioRole = role;
-        req.usuarioRestauranteId = (decoded as any).restauranteId;
+        req.usuarioId = decoded.id;
+        req.usuarioNome = decoded.nome;
+        req.usuarioRole = decoded.papel;
+        req.usuarioRestauranteId = decoded.restauranteId;
+        (req as any).usuarioNome = decoded.nome;
 
         return next();
     } catch (err) {

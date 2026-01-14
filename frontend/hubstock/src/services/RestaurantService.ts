@@ -1,30 +1,29 @@
-import { MOCKED_RESTAURANTS } from '@/api/mockData';
-import type { Restaurant } from '@/types/entity-types';
-
-const DELAY_MS = 500;
-const mockDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import api from './ApiService';
+import type { PublicRegistrationPayload, Restaurante } from '@/types/entity-types';
 
 class RestaurantService {
-
-    // Busca todos os restaurantes.
-    public async getAllRestaurants(): Promise<Restaurant[]> {
-        await mockDelay(DELAY_MS);
-        return structuredClone(MOCKED_RESTAURANTS);
+    /**
+     * Busca todos os restaurantes cadastrados
+     */
+    public async getAllRestaurants(): Promise<Restaurante[]> {
+        const { data } = await api.get<Restaurante[]>('/restaurantes');
+        return data;
     }
 
-    // Criar novo restaurante.
-    public async createRestaurant(data: Omit<Restaurant, 'id'>): Promise<Restaurant> {
-        await mockDelay(DELAY_MS);
-        
-        const newId = `rest-uuid-${MOCKED_RESTAURANTS.length + 1}`;
-        
-        const newRestaurant: Restaurant = {
-            ...data,
-            id: newId,
-        };
+    /**
+     * Busca detalhes de um restaurante específico.
+     */
+    public async getRestaurantById(id: string): Promise<Restaurante> {
+        const { data } = await api.get<Restaurante>(`/restaurantes/${id}`);
+        return data;
+    }
 
-        MOCKED_RESTAURANTS.push(newRestaurant);
-        return newRestaurant;
+    /**
+     * Cria um novo restaurante junto com o Administrador inicial
+     */
+    public async registrarRestaurantePublico(dados: PublicRegistrationPayload) {
+        const { data } = await api.post('/public/register', dados);
+        return data;
     }
 }
 

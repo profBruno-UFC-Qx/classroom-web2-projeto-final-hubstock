@@ -17,13 +17,6 @@
           <span>Venda</span>
         </a-menu-item>
 
-        <a-menu-item key="alugueis" @click="goTo('AlugueisView')">
-          <template #icon>
-            <ClockCircleOutlined />
-          </template>
-          <span>Locações</span>
-        </a-menu-item>
-
         <a-menu-item key="dashboard" @click="goTo('Dashboard')" v-if="authStore.isAdmin">
           <template #icon>
             <DashboardOutlined />
@@ -50,7 +43,6 @@
           </template>
           <span>Dashboard</span>
         </a-menu-item>
-        <!-- <a-divider /> -->
         <a-menu-item key="perfil" @click="goTo('UserProfile')">
           <template #icon><user-outlined /></template>
           <span>Meu Perfil</span>
@@ -69,13 +61,13 @@
 
         <div class="header-center">
           <div class="user-info-header">
-            <a-avatar :size="32" :src="authStore.user.profileImage" />
+            <a-avatar :size="32" :src="authStore.usuario.imagemPerfil" />
             <div class="user-details-header">
               <a-typography-text strong class="user-name-header">
-                {{ authStore.userName }}
+                {{ authStore.usuario.nome }}
               </a-typography-text>
               <a-tag :color="roleColor" class="user-role-tag">
-                {{ authStore.userRole }}
+                {{ authStore.usuario.papel }}
               </a-tag>
             </div>
           </div>
@@ -103,10 +95,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/authStore';
 import {
   DashboardOutlined, MenuUnfoldOutlined, MenuFoldOutlined,
-  BoxPlotOutlined, ShopOutlined, ClockCircleOutlined,
+  BoxPlotOutlined, ShopOutlined,
   LogoutOutlined, UserOutlined, UsergroupAddOutlined
 } from '@ant-design/icons-vue';
 
@@ -121,7 +113,7 @@ const selectedKeys = ref<string[]>([]);
 const openKeys = ref<string[]>([]);
 
 const roleColor = computed(() => {
-  switch (authStore.userRole) {
+  switch (authStore.usuario.papel) {
     case 'SUPERADMINISTRADOR': return 'purple';
     case 'ADMINISTRADOR': return 'blue';
     case 'GARCOM': return 'orange';

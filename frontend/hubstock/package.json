@@ -19,6 +19,7 @@
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
     "ant-design-vue": "^4.2.6",
+    "axios": "^1.13.2",
     "less": "^4.4.2",
     "less-loader": "^12.3.0",
     "lucide-vue-next": "^0.552.0",

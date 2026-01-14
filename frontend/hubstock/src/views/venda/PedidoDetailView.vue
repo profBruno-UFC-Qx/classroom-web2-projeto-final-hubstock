@@ -1,43 +1,38 @@
 <template>
     <div class="pedido-detail-container">
-        <a-page-header :title="`Pedido da Mesa ${mesaId}`" @back="() => $router.push({ name: 'MesaSelection' })">
+        <a-page-header :title="`Pedido da Mesa ${numeroMesa}`" @back="() => $router.push({ name: 'MesaSelection' })">
             <template #extra>
-                <a-button type="primary" danger @click="handleFinalizeSale()" class="finalize-desktop-btn">
-                    Finalizar Venda
-                </a-button>
+                <a-popconfirm title="Deseja fechar a conta?" @confirm="handleFinalizeSale">
+                    <a-button type="primary" danger class="finalize-desktop-btn"
+                        :disabled="pedidoAtual.items.length === 0">
+                        Finalizar Venda (R$ {{ mesaTotal.toFixed(2) }})
+                    </a-button>
+                </a-popconfirm>
             </template>
         </a-page-header>
 
         <a-layout class="pedido-layout">
-
             <a-layout-content class="pedido-content">
-                <div v-if="!currentMesa" class="error-message">
-                    Mesa {{ mesaId }} não encontrada.
-                </div>
-                <div v-else>
-                    <a-button type="primary" size="large" style="margin-bottom: 20px;" @click="drawerVisible = true">
+                <a-spin :spinning="isLoading">
+                    <a-button type="primary" size="large" style="margin-bottom: 20px;" @click="isDrawerOpen = true">
                         <template #icon><shop-outlined /></template>
                         Lançar Pedido
                     </a-button>
 
                     <h3 class="list-title">Itens do Pedido</h3>
 
-                    <a-list item-layout="horizontal" :data-source="currentMesa.items">
+                    <a-list item-layout="horizontal" :data-source="pedidoAtual.items">
                         <template #renderItem="{ item }">
                             <a-list-item>
-                                <a-list-item-meta :title="`${item.name}`"> <template #description>R$ {{
-                                    item.price.toFixed(2) }}</template>
-                                </a-list-item-meta>
+                                <a-list-item-meta :title="item.nomeProduto"
+                                    :description="`Unitário: R$ ${Number(item.precoVenda).toFixed(2)}`" />
 
-                                <QuantityControl :item="item" @update-quantity="updateItemQuantity"
+                                <QuantityControl :item="item" :loading="isLoading" @update-quantity="updateItemQuantity"
                                     @remove-item="removeItemFromMesaById" />
 
                                 <div class="item-total-price">
-                                    R$ {{ (item.price * item.quantity).toFixed(2) }}
+                                    R$ {{ (Number(item.precoVenda) * item.quantidade).toFixed(2) }}
                                 </div>
-
-                                <template #actions>
-                                </template>
                             </a-list-item>
                         </template>
                     </a-list>
@@ -48,130 +43,109 @@
                         @click="handleFinalizeSale()">
                         Finalizar Venda (R$ {{ mesaTotal.toFixed(2) }})
                     </a-button>
-                </div>
+                </a-spin>
             </a-layout-content>
         </a-layout>
 
-        <div class="pedido-detail-container">
-            <ProductDrawer :open="drawerVisible" :drawer-width="drawerWidth" @close="drawerVisible = false"
-                @product-selected="addProductToMesa" />
-        </div>
+        <ProductDrawer :open="isDrawerOpen" :destroyOnClose="true" @close="isDrawerOpen = false"
+            @product-selected="addProductToMesa" :drawer-width="drawerWidth" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { useProductStore } from '@/stores/product';
-import { useSaleStore } from '@/stores/sale';
+import { useProductStore } from '@/stores/productStore';
 import { message } from 'ant-design-vue';
-import { ShopOutlined } from '@ant-design/icons-vue';
-import type { Product } from '@/types/entity-types';
-import { mesas } from '@/types/venda';
 import ProductDrawer from '@/components/ProductDrawer.vue';
+import { useMesaStore } from '@/stores/mesaStore';
 import QuantityControl from '@/components/QuantityControl.vue';
+import { useVendaStore } from '@/stores/vendaStore';
+import { storeToRefs } from 'pinia';
 
 const route = useRoute();
 const router = useRouter();
-const authStore = useAuthStore();
 const productStore = useProductStore();
-const saleStore = useSaleStore();
+const mesaStore = useMesaStore();
+const vendaStore = useVendaStore();
 
-const mesaId = computed(() => Number.parseInt(route.params.mesaId as string));
+const mesaId = route.params.mesaId as string;
 
-const drawerVisible = ref(false);
-const drawerWidth = computed(() => window.innerWidth > 1000 ? 500 : '100%');
+const { pedidoAtual, isLoading } = storeToRefs(vendaStore);
 
-const updateItemQuantity = (productId: number, newQuantity: number) => {
-    if (!currentMesa.value) return;
+const numeroMesa = computed(() => {
+    if (route.params.numeroMesa) return route.params.numeroMesa;
+    const mesaEncontrada = mesaStore.mesas.find(m => m.id === mesaId);
+    return mesaEncontrada ? mesaEncontrada.numero : '...';
+});
 
-    const item = currentMesa.value.items.find(i => i.productId === productId);
-    if (!item) return;
+const isDrawerOpen = ref(false);
+const windowWidth = ref(window.innerWidth);
 
-    const product = productStore.products.find(p => p.id === productId);
-    if (product && newQuantity > product.currentStock) {
-        message.warning(`Estoque máximo atingido para ${item.name}!`);
-        return;
-    }
-
-    item.quantity = newQuantity;
+// Atualiza o valor do ref quando a tela mudar
+const updateWidth = () => {
+    windowWidth.value = window.innerWidth;
 };
 
-const currentMesa = computed(() => {
-    return mesas.value.find(m => m.id === mesaId.value);
-});
+const drawerWidth = computed(() => windowWidth.value > 600 ? 500 : '100%');
+
+// Lança o produto
+const addProductToMesa = async (product: any) => {
+    await vendaStore.adicionarItem(mesaId, product.id, 1);
+    message.success(`${product.nomeProduto} lançado!`);
+};
 
 const mesaTotal = computed(() => {
-    return currentMesa.value?.items.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0;
+    return pedidoAtual.value.items.reduce((sum, item) => sum + (item.precoVenda * item.quantidade), 0);
 });
 
-const addProductToMesa = (product: Product) => {
-    if (!currentMesa.value) return;
-
-    const existingItem = currentMesa.value.items.find(i => i.productId === product.id);
-
-    const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
-
-    if (newQuantity > product.currentStock) {
-        message.warning(`Estoque insuficiente! Disponível: ${product.currentStock}.`);
-        return;
-    }
-
-    if (existingItem) {
-        existingItem.quantity = newQuantity;
-    } else {
-        currentMesa.value.items.push({
-            id: Date.now(),
-            name: product.name,
-            price: product.salePrice,
-            productId: product.id,
-            quantity: 1,
-        });
-    }
-    message.success(`${product.name} adicionado à Mesa ${mesaId.value}.`);
-};
-
-const removeItemFromMesaById = (productId: number) => {
-    if (!currentMesa.value) return;
-
-    currentMesa.value.items = currentMesa.value.items.filter(i => i.productId !== productId);
-    message.info('Item removido do pedido.');
-};
-
+// Finalizar
 const handleFinalizeSale = async () => {
-    if (!currentMesa.value || currentMesa.value.items.length === 0) {
-        message.error("A mesa não possui itens para finalizar a venda.");
-        return;
-    }
-
-    const itemsToRegister = currentMesa.value.items.map(item => ({ productId: item.productId, quantity: item.quantity }));
-    const userId = authStore.userId;
-    if (!userId) {
-        message.error("Usuário não autenticado. Faça login para registrar vendas.");
-        return;
-    }
-
+    if (!pedidoAtual.value.items.length) return;
     try {
-        await saleStore.registerSale(userId, itemsToRegister);
-        message.success(`Venda da Mesa ${mesaId.value} finalizada!`);
+        await vendaStore.finalizarVenda(mesaId);
+        message.success("Venda finalizada!");
+        router.push({ name: 'MesaSelection' });
+    } catch (e) {
+        console.error(e);
+        message.error("Erro ao finalizar venda.");
+    }
+};
 
-        currentMesa.value.items = [];
+// Atualizar quantidade
+const updateItemQuantity = async (productId: string, newQuantity: number) => {
+    const itemLocal = pedidoAtual.value.items.find(i => i.produtoId === productId);
+    if (!itemLocal) return;
 
-    } catch (e: unknown) {
-        if (e instanceof Error) {
-            message.error(`Falha ao registrar a venda: ${e.message}`);
-        } else {
-            message.error(`Falha ao registrar a venda: ${String(e)}`);
-        }
+    const diferenca = newQuantity - itemLocal.quantidade;
+    if (diferenca > 0) {
+        await vendaStore.adicionarItem(mesaId, productId, Math.abs(diferenca));
+    } else {
+        await vendaStore.removerItem(mesaId, productId, Math.abs(diferenca));
+    }
+};
+
+// Remover total
+const removeItemFromMesaById = async (productId: string) => {
+    const itemLocal = pedidoAtual.value.items.find(i => i.produtoId === productId);
+    if (itemLocal) {
+        await vendaStore.removerItem(mesaId, productId, itemLocal.quantidade);
+        message.info('Produto removido');
     }
 };
 
 onMounted(() => {
-    if (!mesaId.value) {
-        router.push({ name: 'MesaSelection' });
-    }
-    productStore.loadAllData();
+    productStore.loadProduct();
+    vendaStore.loadPedido(mesaId);
+    mesaStore.loadMesas();
+
+    // Adiciona o listener quando o componente monta
+    window.addEventListener('resize', updateWidth);
+});
+
+onUnmounted(() => {
+    // Remove o listener quando o componente é destruído
+    window.removeEventListener('resize', updateWidth);
 });
 </script>
 
@@ -211,10 +185,6 @@ onMounted(() => {
 .list-title {
     margin-top: 15px;
     font-size: 1.2em;
-    font-weight: bold;
-}
-
-.item-total-price {
     font-weight: bold;
 }
 

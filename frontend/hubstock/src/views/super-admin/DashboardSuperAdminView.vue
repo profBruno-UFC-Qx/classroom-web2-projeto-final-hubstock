@@ -6,9 +6,10 @@
             <a-list item-layout="horizontal" :data-source="restaurantStore.restaurants" class="restaurant-list">
                 <template #renderItem="{ item }">
                     <a-list-item>
-                        <a-list-item-meta :title="item.name" :description="`CNPJ: ${item.cnpj}`" @click="goToBIView(item.id)" class="restaurant-item">
+                        <a-list-item-meta :title="item.nomeRestaurante" :description="`CNPJ: ${item.cnpjRestaurante}`"
+                            @click="goToBIView(item.id)" class="restaurant-item">
                             <template #avatar>
-                                <a-avatar :src="item.profileImageUrl" size="large" />
+                                <a-avatar :src="item.urlImagemPerfilRestaurante" size="large" />
                             </template>
                         </a-list-item-meta>
                     </a-list-item>
@@ -22,7 +23,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useRestaurantStore } from '@/stores/restaurant';
+import { useRestaurantStore } from '@/stores/restauranteStore';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();

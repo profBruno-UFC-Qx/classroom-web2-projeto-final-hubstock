@@ -1,49 +1,52 @@
-import { MOCKED_USERS } from '@/api/mockData';
-import type { User, UserRole } from '@/types/entity-types';
-
-const DELAY_MS = 500;
-const mockDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import api from './ApiService';
+import type { Usuario, UsuarioPapel, UpdateUserPayload } from '@/types/entity-types';
 
 class UserService {
-
-    // Busca todos os usuários
-    public async getAllUsers(): Promise<User[]> {
-        await mockDelay(DELAY_MS);
-        return structuredClone(MOCKED_USERS).filter(
-            (user: User) => user.role !== 'SUPERADMINISTRADOR'
-        );
+    /**
+     * Busca todos os usuários
+     */
+    public async getAllUsers(): Promise<Usuario[]> {
+        const { data } = await api.get<Usuario[]>('/usuarios');
+        return data;
     }
 
-    // Atualiza o papel de um usuário
-    public async updateUserRole(userId: string, newRole: UserRole): Promise<User> {
-        await mockDelay(DELAY_MS);
-
-        const userIndex = MOCKED_USERS.findIndex(u => u.id === userId);
-
-        if (userIndex === -1) {
-            throw new Error(`Usuário com ID ${userId} não encontrado.`);
-        }
-
-        const user = MOCKED_USERS[userIndex];
-        if (!user) {
-            throw new Error(`Usuário com ID ${userId} não encontrado.`);
-        }
-
-        user.role = newRole;
-
-        return user;
+    /**
+     * Cria um novo usuário
+     */
+    public async createUser(userData: any): Promise<Usuario> {
+        const { data } = await api.post('/usuarios', userData);
+        return data.dados;
     }
 
-    // Exclusão de um usuário
+    /**
+     * Atualiza o perfil do usuário logado
+     */
+    public async updateProfile(userId: string, payload: UpdateUserPayload): Promise<Usuario> {
+        const { data } = await api.put(`/usuarios/${userId}`, payload);
+        return data.dados;
+    }
+
+    /**
+     * Atualiza apenas o papel (role) de um usuário
+     */
+    public async updateUserRole(id: string, papel: UsuarioPapel): Promise<Usuario> {
+        const { data } = await api.patch(`/usuarios/${id}/role`, { role: papel });
+        return data.dados;
+    }
+
+    /**
+     * Exclusão definitiva de um usuário
+     */
     public async deleteUser(userId: string): Promise<void> {
-        await mockDelay(DELAY_MS);
+        await api.delete(`/usuarios/${userId}`);
+    }
 
-        const index = MOCKED_USERS.findIndex(u => u.id === userId);
-        if (index === -1) {
-            throw new Error(`Usuário com ID ${userId} não encontrado para exclusão.`);
-        }
-
-        MOCKED_USERS.splice(index, 1);
+    /**
+     * Busca todos os usuários do restaurante logado
+     */
+    async getUsuariosDoMeuRestaurante() {
+        const { data } = await api.get('/usuarios-restaurante');
+        return data;
     }
 }
 

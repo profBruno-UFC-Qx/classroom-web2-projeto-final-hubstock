@@ -1,44 +1,39 @@
 <template>
     <div class="quantity-control">
-        <a-button size="small" @click="decrementQuantity" :disabled="isChanging">
+        <a-button size="small" type="text" @click="decrement" :disabled="loading">
             <template #icon>
-                <minus-outlined />
+                <minus-outlined v-if="item.quantidade > 1" />
+                <delete-outlined v-else class="delete-icon" />
             </template>
         </a-button>
 
-        <span class="quantity-display" :class="{ 'is-changing': isChanging }">
-            {{ item.quantity }}
-        </span>
+        <span class="quantity-display">{{ item.quantidade }}</span>
 
-        <a-button size="small" @click="incrementQuantity" :disabled="isChanging">
+        <a-button size="small" type="text" @click="increment" :disabled="loading">
             <template #icon><plus-outlined /></template>
         </a-button>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { PlusOutlined, MinusOutlined } from '@ant-design/icons-vue';
-import type { MesaItem } from '@/types/venda';
+import { PlusOutlined, MinusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps<{
-    item: MesaItem;
+    item: any;
+    loading?: boolean;
 }>();
 
-const emit = defineEmits(['updateQuantity', 'removeItem']);
+const emit = defineEmits(['update-quantity', 'remove-item']);
 
-const isChanging = ref(false);
-
-const incrementQuantity = () => {
-    emit('updateQuantity', props.item.productId, props.item.quantity + 1);
+const increment = () => {
+    emit('update-quantity', props.item.produtoId, props.item.quantidade + 1);
 };
 
-const decrementQuantity = () => {
-    if (props.item.quantity === 1) {
-        emit('removeItem', props.item.productId);
-    }
-    else if (props.item.quantity > 1) {
-        emit('updateQuantity', props.item.productId, props.item.quantity - 1);
+const decrement = () => {
+    if (props.item.quantidade > 1) {
+        emit('update-quantity', props.item.produtoId, props.item.quantidade - 1);
+    } else {
+        emit('remove-item', props.item.produtoId);
     }
 };
 </script>
@@ -48,7 +43,7 @@ const decrementQuantity = () => {
     display: flex;
     align-items: center;
     gap: 5px;
-    width: 100px;
+    margin: 0 15px;
 }
 
 .quantity-display {
@@ -59,7 +54,7 @@ const decrementQuantity = () => {
     transition: opacity 0.1s;
 }
 
-.is-changing {
-    opacity: 0.5;
+.delete-icon {
+    color: #ff4d4f;
 }
 </style>

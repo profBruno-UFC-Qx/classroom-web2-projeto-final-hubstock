@@ -1,47 +1,55 @@
-export type UserRole = 'SUPERADMINISTRADOR' | 'ADMINISTRADOR' | 'GARCOM';
+export type UsuarioPapel = 'SUPERADMINISTRADOR' | 'ADMINISTRADOR' | 'GARCOM';
 
-export interface Restaurant {
+export interface Restaurante {
   id: string;
-  name: string;
-  cnpj: string;
-  profileImageUrl: string;
+  nomeRestaurante: string;
+  cnpjRestaurante: string;
+  quantidadeMesas: number;
+  urlImagemPerfilRestaurante: string;
+  usuarios?: Usuario[];
 }
 
-export interface User {
+export interface Usuario {
   id: string;
-  name: string;
+  nome: string;
   email: string;
-  role: UserRole;
-  restaurantId: string;
+  role: UsuarioPapel;
+  restauranteId: string;
+
+}
+export interface UsuarioCompleto {
+  id: string;
+  nome: string;
+  email: string;
+  role: UsuarioPapel;
+  restauranteId: string;
+  senha: string;
 }
 
-export interface Category {
-  id: number;
-  name: string;
-  description: string;
-}
+export type CategoriaProduto = 'ENTRADAS' | 'BEBIDAS' | 'PRATOS_PRINCIPAIS' |  'PIZZAS' | 'SOBREMESAS' | 'SALADA' | 'OUTROS';
 
-// PRODUTO
-export type ProductUnit = 'UNIDADE' | 'LITRO' | 'KILOGRAMA';
+export type UnidadeMedida = 'UNIDADE' | 'QUILOGRAMA' | 'LITRO' | 'PACOTE' | 'GARRAFA';
 
-export interface Product {
-  id: number;
-  categoryId: number;
-  name: string;
-  description: string;
-  currentStock: number;
-  unitOfMeasure: ProductUnit;
-  costPrice: number;
-  salePrice: number;
-  imageUrl?: string;
+export interface Produto {
+  id: string;
+  nomeProduto: string;
+  descricao: string;
+  unidadeMedidaProduto: UnidadeMedida;
+  categoriaProduto: CategoriaProduto;
+  precoCustoProduto: number;
+  precoVendaProduto: number;
+  urlImagemProduto?: string;
+  estoqueAtual: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // MOVIMENTACAO_ESTOQUE
-export type MovementType = 'ENTRADA' | 'SAIDA_VENDA' | 'SAIDA_PERDA';
+export type MovementType = 'ENTRADA' | 'SAIDA';
 
 export interface StockMovement {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   type: MovementType;
   quantity: number;
   date: string;
@@ -50,49 +58,73 @@ export interface StockMovement {
 }
 
 // VENDA
-export interface Sale {
-  id: number;
-  userId: string;
-  date: string;
-  totalAmount: number;
+export interface Venda {
+  id: string;
+  data: string;
+  usuarioId: string;
+  nomeUsuario: string;
+  restauranteId: string;
+  totalValor: number;
+  totalCusto: number;
+  totalLucro: number;
+  items: VendaItem[];
+  mesaId: string;
 }
 
 // ITEM_VENDA
-export interface SaleItem {
-  id: number;
-  saleId: number;
-  productId: number;
-  quantity: number;
-  unitPrice: number; // Preço pelo qual o item foi vendido
+export interface VendaItem {
+  id: string;
+  nomeProduto: string;
+  quantidade: number;
+  precoVenda: number;
+  precoCusto: number;
+  totalLucro: number;
+  vendaId: string;
+  venda: Venda;
 }
 
 // Registro público de restaurante e administrador
 export interface PublicRegistrationPayload {
-    restaurantName: string;
-    cnpj: string;
-    profileImageUrl: string;
-    adminName: string;
-    adminEmail: string;
-    adminPassword: string;
+    nomeRestaurante: string;
+    cnpjRestaurante: string;
+    urlImagemPerfilRestaurante: string;
+    quantidadeMesas: number;
+    nomeAdministrador: string;
+    emailAdministrador: string;
+    senhaAdministrador: string;
 }
 
 // Atualização de usuário
 export interface UpdateUserPayload {
-    name: string;
+    nome: string;
     email: string;
-    newPassword?: string;
+    senha?: string;
 }
 
-export interface Aluguel {
-  id: number;
-  clienteNome: string;
-  clienteTelefone: string;
-  produtoId: number;
-  produtoNome: string;
-  produtoFotoUrl: string;
-  quantidade: number;
-  dataInicio: string;
-  limiteHoras: number;
-  status: 'ATIVO' | 'FINALIZADO' | 'ATRASADO';
-  valorTotal: number;
+export interface HistoricoMensal {
+    month: string;
+    revenue: number;
+    profit: number;
+}
+
+export interface TopProdutosVendas {
+    productName: string;
+    totalQuantity: number;
+    totalRevenue: number;
+}
+
+export interface BIResponse {
+    revenueHistory: HistoricoMensal[];
+    topSellers: TopProdutosVendas[];
+}
+
+export type StatusMesa = 'DISPONIVEL' | 'OCUPADA' | 'RESERVADA';
+
+export interface Mesa {
+    id: string;
+    numero: number;
+    status: StatusMesa;
+    restauranteId: string;
+    temVendaAtiva: boolean;   
+    quantidadeItens: number;
 }

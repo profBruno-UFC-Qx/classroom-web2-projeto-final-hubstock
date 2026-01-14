@@ -1,129 +1,80 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore';
 import HomeView from '../views/HomeView.vue'
-import { useAuthStore } from '@/stores/auth';
-import type { UserRole } from '@/types/entity-types';
-import ProdutosAdminView from '../views/produto/ProdutosAdminView.vue';
+import ProdutosAdminView from '../views/admin/produtos/ProdutosAdminView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 import PedidoDetailView from '@/views/venda/PedidoDetailView.vue';
 import MesaSelectionView from '@/views/venda/MesaSelectionView.vue';
-import UsuariosView from '@/views/users/UsuariosView.vue';
+import UsuariosView from '@/views/admin/usuarios/UsuariosView.vue';
 import DashboardSuperAdmin from '@/views/super-admin/DashboardSuperAdminView.vue';
 import DashboardAdmin from '@/views/admin/dashboard/DashboardAdminView.vue';
 import RestaurantBIView from '@/views/super-admin/RestaurantBIView.vue';
 import CadastroRestauranteView from '@/views/CadastroRestauranteView.vue';
-import UserProfileView from '@/views/users/UserProfileView.vue';
-import AluguelView from '@/views/aluguel/AluguelView.vue';
+import UserProfileView from '@/views/profile/UserProfileView.vue';
+import type { UsuarioPapel } from '@/types/entity-types';
 
 type AppRouteRecordRaw = RouteRecordRaw & {
   meta?: {
     requiresAuth?: boolean;
-    requiredRole?: UserRole;
+    requiredRole?: UsuarioPapel;
   };
 };
 
 const routes: Array<AppRouteRecordRaw> = [
-  {
-    path: '/',
-    name: 'Home',
-    component: HomeView,
-    meta: {
-      requiresAuth: false,
-    },
-  },
-  {
-    path: '/cadastro',
-    name: 'RestauranteCadastro',
-    component: CadastroRestauranteView,
-    meta: {
-      requiresAuth: false,
-    },
-  },
+  { path: '/', name: 'Home', component: HomeView },
+  { path: '/cadastro', name: 'RestauranteCadastro', component: CadastroRestauranteView },
+
   {
     path: '/venda',
     name: 'MesaSelection',
     component: MesaSelectionView,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'GARCOM',
-    },
-  },
-  {
-    path: '/alugueis',
-    name: 'AlugueisView',
-    component: AluguelView,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'GARCOM',
-    },
+    meta: { requiresAuth: true, requiredRole: 'GARCOM' }
   },
   {
     path: '/venda/:mesaId',
     name: 'PedidoDetail',
     component: PedidoDetailView,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'GARCOM',
-    },
+    meta: { requiresAuth: true, requiredRole: 'GARCOM' }
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardAdmin,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'ADMINISTRADOR',
-    },
+    meta: { requiresAuth: true, requiredRole: 'ADMINISTRADOR' }
   },
   {
     path: '/produtos',
     name: 'ProdutosAdmin',
     component: ProdutosAdminView,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'ADMINISTRADOR',
-    },
+    meta: { requiresAuth: true, requiredRole: 'ADMINISTRADOR' }
   },
   {
     path: '/users',
     name: 'Users',
     component: UsuariosView,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'ADMINISTRADOR',
-    },
+    meta: { requiresAuth: true, requiredRole: 'ADMINISTRADOR' }
   },
   {
     path: '/superadmin/dashboard',
     name: 'DashboardSuperAdmin',
     component: DashboardSuperAdmin,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'SUPERADMINISTRADOR',
-    },
+    meta: { requiresAuth: true, requiredRole: 'SUPERADMINISTRADOR' }
   },
   {
     path: '/superadmin/restaurante/:restId',
     name: 'RestaurantBI',
     component: RestaurantBIView,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'SUPERADMINISTRADOR',
-    },
+    meta: { requiresAuth: true, requiredRole: 'SUPERADMINISTRADOR' }
   },
   {
     path: '/perfil',
     name: 'UserProfile',
     component: UserProfileView,
-    meta: {
-      requiresAuth: true,
-      requiredRole: 'GARCOM',
-    },
+    meta: { requiresAuth: true, requiredRole: 'GARCOM' }
   },
-  {
-    path: '/:catchAll(.*)', // Rota 404
-    name: 'NotFound',
-    component: NotFoundView,
-  },
+
+  // se o user digitar qualquer coisa errada, cai aqui
+  { path: '/:catchAll(.*)', name: 'NotFound', component: NotFoundView },
 ];
 
 const router = createRouter({
@@ -131,40 +82,32 @@ const router = createRouter({
   routes,
 });
 
+// Trava de segurança para cada troca de página
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
+  const auth = useAuthStore();
 
-  const requiresAuth = to.meta.requiresAuth;
-  const requiredRole = to.meta.requiredRole as UserRole;
-  const isAuthenticated = authStore.isAuthenticated;
-
-  const redirectToUserDefaultRoute = () => {
-    if (authStore.isSuperAdmin) {
-      return next({ name: 'DashboardSuperAdmin' });
-    }
-    if (authStore.isAdmin) {
-      return next({ name: 'Dashboard' });
-    }
-    if (authStore.isGarcom) {
-      return next({ name: 'MesaSelection' });
-    }
+  // vê se a página precisa de login e se o user está logado
+  if (to.meta.requiresAuth && !auth.estaAutenticado) {
     return next({ name: 'Home' });
-  };
-
-  if (requiresAuth && !isAuthenticated) {
-    return next({ name: 'Home', query: { redirect: to.fullPath } });
   }
 
-  if (isAuthenticated && !requiredRole && authStore.hasRequiredRole(requiredRole)) {
-    console.log(`Acesso Negado. Papel necessário: ${requiredRole}. Papel atual: ${authStore.userRole}`);
-    return redirectToUserDefaultRoute();
+  // se estiver logado e tentar ir pra Home (login), manda pro lugar certo dele
+  if (auth.estaAutenticado && to.name === 'Home') {
+    if (auth.isSuperAdmin) return next({ name: 'DashboardSuperAdmin' });
+    if (auth.isAdmin) return next({ name: 'Dashboard' });
+    return next({ name: 'MesaSelection' });
   }
 
-  if (isAuthenticated && (to.name === 'Login' || to.name === 'Home')) {
-    return redirectToUserDefaultRoute();
+  // checa se o usuário tem o cargo certo pra entrar na tela
+  if (to.meta.requiredRole) {
+    const temPermissao = auth.hasRequiredRole(to.meta.requiredRole as string);
+    if (!temPermissao) {
+      console.log("Acesso negado, você não tem o cargo necessário!");
+      return next(false);
+    }
   }
 
   next();
 });
 
-export default router
+export default router;

@@ -1,70 +1,141 @@
 import type { Request, Response } from "express";
 import { AppDataSource } from "../database/data-source.js";
 import { Produto } from "../entities/Produto.js";
+import { MovimentacaoEstoque } from "../entities/MovimentacaoEstoque.js";
+import { TipoMovimentacaoEstoque } from "../types/index.js";
 import { Like } from "typeorm";
 
 export class ProdutoController {
-    // Lista todos com filtro opcional por nome ou locação
+
+    // Lista os produtos do restaurante (da pra filtrar pelo nome)
     static async list(req: Request, res: Response) {
+        const restId = (req as any).usuarioRestauranteId;
+        const busca = req.query['busca'] as string;
+
         const repo = AppDataSource.getRepository(Produto);
-        const { nome, isLocacao } = req.query;
 
-        const onde: any = { where: {} };
-        if (nome) onde.where.nomeProduto = Like(`%${nome}%`);
-        if (isLocacao) onde.where.isLocacao = isLocacao === "true";
+        try {
+            // prepara o filtro basico por restaurante
+            let onde: any = { restauranteId: restId };
 
-        const produtos = await repo.find(onde);
-        return res.json(produtos);
+            // se mandarem algo na busca, filtra pelo nome usando Like
+            if (busca) {
+                onde.nomeProduto = Like(`%${busca}%`);
+            }
+
+            const lista = await repo.find({
+                where: onde,
+                order: { nomeProduto: "ASC" }
+            });
+
+            return res.json(lista);
+        } catch (err) {
+            console.log("Erro ao listar produtos:", err);
+            return res.status(500).json({ erro: "Nao deu pra carregar os produtos" });
+        }
     }
 
-    // Busca por ID
+    // Pega só um produto pelo ID
     static async getById(req: Request, res: Response) {
+        const restId = (req as any).usuarioRestauranteId;
         const repo = AppDataSource.getRepository(Produto);
-        const produto = await repo.findOneBy({ id: Number(req.params['id']) });
-        return produto ? res.json(produto) : res.status(404).json({ erro: "Produto não encontrado." });
-    }
 
-    // Cria o produto
-    static async create(req: Request, res: Response) {
-        const repo = AppDataSource.getRepository(Produto);
-        const novoProduto = repo.create(req.body);
-        await repo.save(novoProduto);
-        return res.status(201).json({
-            mensagem: "Produto criado com sucesso",
-            dados: novoProduto
+        const prod = await repo.findOneBy({
+            id: String(req.params['id']),
+            restauranteId: restId
         });
+
+        if (!prod) return res.status(404).json({ erro: "Produto sumiu ou nao existe" });
+
+        return res.json(prod);
     }
 
-    // Edita o produto
+    // Cria um produto novo vinculado ao restaurante logado
+    static async create(req: Request, res: Response) {
+        const restId = (req as any).usuarioRestauranteId;
+        const repo = AppDataSource.getRepository(Produto);
+
+        const novo = repo.create({
+            ...req.body,
+            restauranteId: restId
+        });
+
+        await repo.save(novo);
+        return res.status(201).json(novo);
+    }
+
+    // Atualiza os dados do produto (preco, nome, ...)
     static async update(req: Request, res: Response) {
+        const restId = (req as any).usuarioRestauranteId;
         const repo = AppDataSource.getRepository(Produto);
         const { id } = req.params;
-        await repo.update(Number(id), req.body);
-        return res.json({ mensagem: "Produto atualizado com sucesso" });
+
+        // olha se o produto é mesmo desse restaurante
+        const existe = await repo.findOneBy({ id: String(id), restauranteId: restId });
+        if (!existe) return res.status(404).json({ erro: "Produto nao encontrado" });
+
+        await repo.update(String(id), req.body);
+        return res.json({ mensagem: "Produto atualizado!" });
     }
 
-    // Exclui o produto
+    // Deleta o produto do banco
     static async delete(req: Request, res: Response) {
+        const restId = (req as any).usuarioRestauranteId;
         const repo = AppDataSource.getRepository(Produto);
-        await repo.delete(Number(req.params['id']));
+        const { id } = req.params;
+
+        const existe = await repo.findOneBy({ id: String(id), restauranteId: restId });
+        if (!existe) return res.status(404).json({ erro: "Produto nao encontrado" });
+
+        await repo.delete(String(id));
         return res.status(204).send();
     }
 
-    // Entrada de estoque
-    static async addStock(req: Request, res: Response) {
-        const repo = AppDataSource.getRepository(Produto);
+    // Mexe no estoque (entrada ou saida) e guarda o log
+    static async updateStock(req: Request, res: Response) {
         const { id } = req.params;
-        const { quantidade } = req.body;
+        const { quantidade, tipo, observacao } = req.body;
+        const userId = (req as any).usuarioId;
+        const restId = (req as any).usuarioRestauranteId;
 
-        const produto = await repo.findOneBy({ id: Number(id) });
-        if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
+        const repoProd = AppDataSource.getRepository(Produto);
+        const repoLog = AppDataSource.getRepository(MovimentacaoEstoque);
 
-        produto.estoqueAtual += Number(quantidade);
-        await repo.save(produto);
+        try {
+            const prod = await repoProd.findOneBy({ id: String(id), restauranteId: restId });
 
-        return res.json({
-            mensagem: "Estoque atualizado com sucesso",
-            estoqueAtual: produto.estoqueAtual
-        });
+            if (!prod) return res.status(404).json({ erro: "Produto nao existe" });
+
+            const qtd = Number(quantidade);
+
+            // Ve se é entrada ou saida e faz a conta
+            if (tipo === TipoMovimentacaoEstoque.ENTRADA) {
+                prod.estoqueAtual += qtd;
+            } else {
+                // se for saida, checa se tem o suficiente
+                if (prod.estoqueAtual < qtd) {
+                    return res.status(400).json({ erro: "Nao tem estoque suficiente" });
+                }
+                prod.estoqueAtual -= qtd;
+            }
+
+            await repoProd.save(prod);
+
+            // cria o registro da movimentacao pra n se perder dps
+            const log = repoLog.create({
+                tipo,
+                quantidade: qtd,
+                observacao: observacao || "",
+                produtoId: String(id),
+                responsavelId: String(userId)
+            });
+            await repoLog.save(log);
+
+            return res.json({ mensagem: "Estoque atualizado!", novoTotal: prod.estoqueAtual });
+
+        } catch (err) {
+            console.log("Erro no estoque:", err);
+            return res.status(500).json({ erro: "Erro ao mexer no estoque" });
+        }
     }
 }

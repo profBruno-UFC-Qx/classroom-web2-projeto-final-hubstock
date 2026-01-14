@@ -1,17 +1,16 @@
 import type { Request, Response, NextFunction } from "express";
-import { ZodObject, ZodError } from "zod";
+import { ZodError } from "zod";
 
-export const validate = (schema: ZodObject<any>) => {
+export const validate = (schema: any) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            await schema.parseAsync(req.body);
+            await schema.parseAsync(req.body); 
             next();
-        } catch (erro) {
-            if (erro instanceof ZodError) {
+        } catch (error) {
+            if (error instanceof ZodError) {
                 return res.status(400).json({
                     erro: "Dados inválidos",
-                    // Usamos 'issues' que é o padrão recomendado pelo Zod
-                    detalhes: erro.issues.map(issue => ({
+                    detalhes: error.issues.map(issue => ({
                         campo: issue.path.join("."),
                         mensagem: issue.message
                     }))

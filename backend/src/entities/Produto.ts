@@ -3,8 +3,8 @@ import { CategoriaProduto, UnidadeMedida } from "../types/index.js";
 
 @Entity("produtos")
 export class Produto {
-    @PrimaryGeneratedColumn()
-    id!: number;
+    @PrimaryGeneratedColumn("uuid")
+    id!: string;
 
     @Column({ type: "varchar" })
     nomeProduto!: string;
@@ -30,8 +30,8 @@ export class Produto {
     @Column({ type: "int", default: 0 })
     estoqueAtual!: number;
 
-    @Column({ type: "boolean", default: false })
-    isLocacao!: boolean;
+    @Column({ type: "varchar" })
+    restauranteId!: string;
 
     @CreateDateColumn()
     createdAt!: Date;

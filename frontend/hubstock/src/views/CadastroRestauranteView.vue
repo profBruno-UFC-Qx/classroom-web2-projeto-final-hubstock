@@ -6,7 +6,7 @@
     </div>
 
     <div class="content-section">
-      <div v-if="authStore.isAuthenticated" class="welcome-message">
+      <div v-if="authStore.estaAutenticado" class="welcome-message">
         <p>Você já está logado. Redirecionando para seu painel...</p>
       </div>
 
@@ -17,17 +17,25 @@
 
           <div class="input-group">
             <label for="restaurante-name" class="label-forms">Nome do restaurante</label>
-            <input type="text" id="restaurante-name" v-model="formState.restaurantName"
+            <input type="text" id="restaurante-name" v-model="formulario.nomeRestaurante"
               placeholder="Ex: Autêntica Comida Caseira" required />
           </div>
           <div class="input-group">
             <label for="cnpj" class="label-forms">CNPJ</label>
-            <input type="text" id="cnpj" v-model="formState.cnpj" placeholder="12.345.678/0001-90" required />
+            <input type="text" id="cnpj" v-model="formulario.cnpjRestaurante" placeholder="12.345.678/0001-90"
+              required />
           </div>
           <div class="input-group">
             <label for="logo-url" class="label-forms">URL da Logo</label>
-            <input type="url" id="logo-url" v-model="formState.profileImageUrl"
+            <input type="url" id="logo-url" v-model="formulario.urlImagemPerfilRestaurante"
               placeholder="Ex: https://i.imgur.com/logo.png" required />
+          </div>
+
+          <div class="input-group">
+            <label for="quantidade-mesas" class="label-forms">Quantidade de Mesas Inicial</label>
+            <input type="number" id="quantidade-mesas" v-model.number="formulario.quantidadeMesas" min="1" max="100"
+              placeholder="Ex: 15" required />
+            <small style="color: #8c8c8c;">Você poderá adicionar mais mesas depois.</small>
           </div>
 
           <a-divider />
@@ -35,17 +43,18 @@
 
           <div class="input-group">
             <label for="admin-name" class="label-forms">Nome completo</label>
-            <input type="text" id="admin-name" v-model="formState.adminName" placeholder="Ex: Maria Santos" required />
+            <input type="text" id="admin-name" v-model="formulario.nomeAdministrador" placeholder="Ex: Maria Santos"
+              required />
           </div>
           <div class="input-group">
             <label for="admin-email" class="label-forms">E-mail (Login)</label>
-            <input type="email" id="admin-email" v-model="formState.adminEmail" placeholder="maria.santos@email.com"
-              required />
+            <input type="email" id="admin-email" v-model="formulario.emailAdministrador"
+              placeholder="maria.santos@email.com" required />
           </div>
           <div class="input-group">
-            <label for="admin-password">Senha</label>
-            <input type="password" id="admin-password" v-model="formState.adminPassword" placeholder="**************"
-              required />
+            <label for="admin-password" class="label-forms">Senha</label>
+            <input type="password" id="admin-password" v-model="formulario.senhaAdministrador"
+              placeholder="**************" required />
           </div>
 
           <button type="submit" :disabled="isLoading" class="login-button">
@@ -67,60 +76,66 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { useAuthStore } from '@/stores/auth';
-import { useUserStore } from '@/stores/user';
+import { reactive, watch } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
+import { useUserStore } from '@/stores/userStore';
+import { storeToRefs } from 'pinia';
 
 const authStore = useAuthStore();
 const userStore = useUserStore();
 const router = useRouter();
 
-const isLoading = ref(false);
-const error = ref<string | null>(null);
+const { isLoading, error } = storeToRefs(userStore);
 
-const formState = reactive({
-  restaurantName: '',
-  cnpj: '',
-  profileImageUrl: '',
-  adminName: '',
-  adminEmail: '',
-  adminPassword: '',
+const formulario = reactive({
+  nomeRestaurante: "",
+  cnpjRestaurante: "",
+  urlImagemPerfilRestaurante: "",
+  quantidadeMesas: 10,
+  nomeAdministrador: "",
+  emailAdministrador: "",
+  senhaAdministrador: ""
+});
+
+watch(() => formulario.cnpjRestaurante, (val) => {
+  if (!val) return;
+
+  const cleaned = val.replace(/\D/g, '');
+  formulario.cnpjRestaurante = cleaned
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2')
+    .substring(0, 18);
 });
 
 async function handleSubmit() {
-  error.value = null;
-  isLoading.value = true;
-
-  if (formState.adminPassword.length < 4) {
-    error.value = 'A senha deve ter pelo menos 4 caracteres.';
-    isLoading.value = false;
+  if (formulario.senhaAdministrador.length < 4) {
+    message.error('A senha deve ter pelo menos 4 caracteres.');
     return;
   }
 
   try {
-    const result = await userStore.registerNewRestaurantAndAdmin(formState);
+    await userStore.registerNewRestaurantAndAdmin(formulario);
 
-    const username = formState.adminEmail.split('@')[0]?.split('.')[0] || '';
+    // Tenta o login automático usando o email e senha recém criados
     const loginSuccess = await authStore.login(
-      username,
-      formState.adminPassword
+      formulario.emailAdministrador,
+      formulario.senhaAdministrador
     );
 
     if (loginSuccess) {
-      message.success(`Restaurante "${result.restaurant.name}" cadastrado e login efetuado!`);
+      message.success(`Restaurante "${formulario.nomeRestaurante}" cadastrado com sucesso!`);
       router.push({ name: 'Dashboard' });
     } else {
-      message.warning("Cadastro efetuado, mas falha no login automático. Tente novamente.");
-      router.push({ name: 'Home' });
+      message.warning("Cadastro realizado! Por favor, faça login manualmente.");
+      router.push({ name: 'Login' });
     }
 
-  } catch (err: unknown) {
-    error.value = (err as Error).message || 'Ocorreu um erro no cadastro.';
+  } catch (err: any) {
     console.error('Erro de Cadastro:', err);
-  } finally {
-    isLoading.value = false;
   }
 }
 </script>
